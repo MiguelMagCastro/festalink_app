@@ -1,0 +1,62 @@
+@startuml
+title FestaLink — Autorização e Papéis (RBAC)
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundCorner 10
+skinparam defaultFontName "Helvetica"
+skinparam note {
+  BackgroundColor #FFFFFF
+  BorderColor #4B5563
+  FontColor #111827
+}
+
+note as Matriz
+Matriz de operações por papel.
+
+|= Operação                       |= Anônimo |= Cliente                          |= Prestador            |
+| Cadastrar conta                 | sim      | —                                 | —                     |
+| Login                           | sim      | —                                 | —                     |
+| Listar salões                   | —        | sim                               | sim                   |
+| Ver detalhes do salão           | —        | sim                               | sim                   |
+| Cadastrar salão                 | —        | —                                 | sim                   |
+| Editar salão                    | —        | —                                 | dono                  |
+| Excluir salão                   | —        | —                                 | dono                  |
+| Definir horários do salão       | —        | —                                 | dono                  |
+| Cadastrar / remover bloqueio    | —        | —                                 | dono                  |
+| Listar bloqueios do salão       | —        | —                                 | dono                  |
+| Solicitar reserva               | —        | sim                               | —                     |
+| Listar minhas reservas          | —        | sim                               | —                     |
+| Listar pedidos recebidos        | —        | —                                 | sim                   |
+| Aprovar reserva                 | —        | —                                 | dono do salão         |
+| Recusar reserva                 | —        | —                                 | dono do salão         |
+| Cancelar reserva                | —        | dono da reserva                   | —                     |
+| Ver avaliações de um salão      | —        | sim                               | sim                   |
+| Postar avaliação                | —        | reserva concluída e do cliente    | —                     |
+| Editar / excluir avaliação      | —        | dono da avaliação, sem resposta   | —                     |
+| Responder avaliação             | —        | —                                 | dono do salão         |
+| Editar / excluir resposta       | —        | —                                 | dono, dentro de 24h   |
+end note
+
+note as Glossario
+Glossário.
+
+"dono" indica que o middleware verifica se o usuário
+autenticado é o proprietário do recurso. Para salão, é
+o prestador cadastrado em saloes.prestador_id. Para
+reserva, é o cliente cadastrado em reservas.cliente_id.
+Para avaliação, é o cliente da reserva associada.
+
+"—" indica que o papel não pode executar a operação;
+o backend responde 403 Forbidden.
+
+"Anônimo" é todo request sem header Authorization
+válido. Endpoints protegidos respondem 401
+Unauthorized.
+
+O papel do usuário fica armazenado no JWT (claim
+"papel") emitido no login. O middleware de autorização
+lê o claim e a propriedade do recurso a cada request.
+end note
+
+@enduml
