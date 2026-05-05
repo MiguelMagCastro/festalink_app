@@ -4,6 +4,7 @@ function paraDTO(usuario) {
     nome: usuario.nome,
     email: usuario.email,
     papel: usuario.papel,
+    criadoEm: usuario.criadoEm,
   };
 }
 
