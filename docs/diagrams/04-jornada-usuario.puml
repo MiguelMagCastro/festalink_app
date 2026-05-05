@@ -1,0 +1,74 @@
+@startuml
+title FestaLink — Jornada do Usuário
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundCorner 10
+skinparam defaultFontName "Helvetica"
+skinparam activity {
+  BackgroundColor #F5F7FB
+  BorderColor #4B5563
+  FontColor #111827
+  DiamondBackgroundColor #FFF7E6
+  DiamondBorderColor #B58900
+}
+skinparam note {
+  BackgroundColor #FFF7E6
+  BorderColor #B58900
+}
+
+|Prestador|
+start
+:Cria conta;
+:Cadastra salão\n(dados, regras estruturadas\ne regras adicionais em texto);
+:Define horários de\nfuncionamento por dia da semana;
+if (Tem data para bloquear?) then (sim)
+  :Cadastra bloqueio\n(data, horário e motivo);
+endif
+
+|Cliente|
+:Cria conta;
+:Busca salões;
+:Abre detalhes do salão\n(regras, capacidade, valor,\nhorários e avaliações);
+:Solicita reserva\nescolhendo data e horário;
+
+|Prestador|
+:Recebe notificação de\nnovo pedido via WebSocket;
+:Abre detalhes da solicitação;
+if (Aprovar?) then (sim)
+  :Aprova reserva;
+else (não)
+  :Recusa reserva;
+endif
+
+|Cliente|
+:Recebe a atualização\ndo status da reserva;
+if (Reserva aprovada?) then (sim)
+  :Aguarda chegar a data;
+  :Usa o salão na data combinada;
+  if (Avalia o salão?) then (sim)
+    :Posta avaliação\n(nota de 1 a 5 + comentário);
+  else (não)
+    stop
+  endif
+else (recusada)
+  stop
+endif
+
+|Prestador|
+:Vê a avaliação em\n"Avaliações recebidas";
+if (Responde?) then (sim)
+  :Posta resposta\n(editável nas próximas 24 horas);
+else (não)
+  stop
+endif
+
+|Cliente|
+:Vê a resposta do prestador;
+note right
+  A partir daqui a avaliação
+  fica congelada para o cliente.
+end note
+stop
+
+@enduml
