@@ -1,0 +1,55 @@
+@startuml
+title FestaLink — Visão Geral do Produto
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundCorner 10
+skinparam defaultFontName "Helvetica"
+skinparam rectangle {
+  BackgroundColor #F5F7FB
+  BorderColor #4B5563
+  FontColor #111827
+}
+skinparam note {
+  BackgroundColor #FFF7E6
+  BorderColor #B58900
+}
+
+actor "Cliente\n(quem aluga)" as cliente
+actor "Prestador\n(dono do salão)" as prestador
+
+rectangle "FestaLink" as sys {
+  rectangle "App Cliente\n(Flutter)" as appc
+  rectangle "App Prestador\n(Flutter)" as appp
+  rectangle "Backend\nREST + MOM\n(Node.js + SQLite)" as back
+}
+
+cliente --> appc : busca salões\ne pede reserva
+prestador --> appp : aprova ou\nrecusa pedidos
+
+appc --> back : HTTPS / REST
+appp --> back : HTTPS / REST
+back ..> appp : evento de\nnovo pedido
+
+note right of cliente
+  **Valor para o cliente**
+  • Achar salões disponíveis sem ligar
+  • Comparar preço, capacidade e data
+  • Saber rápido se a reserva foi aceita
+end note
+
+note left of prestador
+  **Valor para o prestador**
+  • Recebe pedidos direto no celular
+  • Aprova ou recusa em poucos toques
+  • Menos vai-e-vem por telefone e WhatsApp
+end note
+
+note bottom of sys
+  **Diferencial:** mobile-first e event-driven.
+  O prestador é notificado em tempo real
+  quando chega uma nova solicitação,
+  sem depender de polling do app.
+end note
+
+@enduml
