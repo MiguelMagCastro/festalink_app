@@ -1,0 +1,87 @@
+@startuml
+title FestaLink — Diagrama de APIs (REST)
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundCorner 10
+skinparam defaultFontName "Helvetica"
+skinparam class {
+  BackgroundColor #F5F7FB
+  BorderColor #4B5563
+  FontColor #111827
+}
+skinparam note {
+  BackgroundColor #FFF7E6
+  BorderColor #B58900
+}
+
+class "Auth" as auth <<resource>> {
+  + POST   /auth/registrar
+  + POST   /auth/login
+}
+
+class "Saloes" as saloes <<resource>> {
+  + GET    /saloes
+  + GET    /saloes/{id}
+  + POST   /saloes                 [prestador]
+  + PUT    /saloes/{id}            [prestador dono]
+  + DELETE /saloes/{id}            [prestador dono]
+}
+
+class "Horarios" as horarios <<resource>> {
+  + PUT    /saloes/{id}/horarios   [prestador dono]
+}
+
+class "Bloqueios" as bloqueios <<resource>> {
+  + POST   /saloes/{id}/bloqueios             [prestador dono]
+  + GET    /saloes/{id}/bloqueios             [prestador dono]
+  + DELETE /saloes/{id}/bloqueios/{bloqId}    [prestador dono]
+}
+
+class "Reservas" as reservas <<resource>> {
+  + POST   /reservas                  [cliente]
+  + GET    /reservas/minhas           [cliente]
+  + GET    /reservas/recebidas        [prestador]
+  + PATCH  /reservas/{id}/aprovar     [prestador dono do salão]
+  + PATCH  /reservas/{id}/recusar     [prestador dono do salão]
+  + PATCH  /reservas/{id}/cancelar    [cliente da reserva]
+}
+
+class "Avaliacoes" as avaliacoes <<resource>> {
+  + POST   /reservas/{id}/avaliacao   [cliente da reserva, reserva concluída, sem avaliação anterior]
+  + PUT    /reservas/{id}/avaliacao   [cliente da reserva, prestador ainda não respondeu]
+  + DELETE /reservas/{id}/avaliacao   [cliente da reserva, prestador ainda não respondeu]
+  + GET    /saloes/{id}/avaliacoes
+}
+
+class "Respostas" as respostas <<resource>> {
+  + POST   /avaliacoes/{id}/resposta  [prestador dono do salão]
+  + PUT    /avaliacoes/{id}/resposta  [prestador dono, dentro de 24h da postagem]
+  + DELETE /avaliacoes/{id}/resposta  [prestador dono, dentro de 24h da postagem]
+}
+
+note as N1
+  Todos os endpoints exceto POST /auth/registrar
+  e POST /auth/login exigem o header
+  Authorization: Bearer <JWT>.
+
+  Os colchetes indicam quem pode chamar cada
+  endpoint: o middleware de autorização verifica
+  o papel do usuário e, quando aplicável, a posse
+  do recurso (dono do salão ou cliente da reserva).
+
+  Códigos de status usados:
+  200 OK         leitura com sucesso
+  201 Created    criação
+  204 No Content exclusão ou atualização sem corpo
+  400 Bad Request validação falhou
+  401 Unauthorized sem JWT ou JWT inválido
+  403 Forbidden  autenticado mas sem permissão
+  404 Not Found  recurso inexistente
+  409 Conflict   regra de negócio violada
+                 (ex.: avaliar reserva ainda não
+                 concluída, responder avaliação
+                 após o prazo)
+end note
+
+@enduml
