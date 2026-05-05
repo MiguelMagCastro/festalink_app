@@ -8,6 +8,8 @@ const STATUS_RESERVA = Object.freeze({
   CANCELADA: 'cancelada',
 });
 
+const JANELA_CANCELAMENTO_MS = 48 * 60 * 60 * 1000;
+
 class Reserva {
   constructor({
     id = null,
@@ -51,6 +53,17 @@ class Reserva {
     return new Periodo(this.horaInicio, this.horaFim);
   }
 
+  inicioDoEvento() {
+    const [y, m, d] = this.dataEvento.split('-').map(Number);
+    const [hh, mm] = this.horaInicio.split(':').map(Number);
+    return new Date(y, m - 1, d, hh, mm);
+  }
+
+  cancelamentoPermitido(agora = new Date()) {
+    const limite = this.inicioDoEvento().getTime() - JANELA_CANCELAMENTO_MS;
+    return agora.getTime() <= limite;
+  }
+
   aprovar(agora = new Date()) {
     if (this.status !== STATUS_RESERVA.PENDENTE) {
       throw new ConflitoEstadoError(`não dá pra aprovar uma reserva com status "${this.status}"`);
@@ -73,6 +86,9 @@ class Reserva {
     if (!permitido) {
       throw new ConflitoEstadoError(`cliente não pode cancelar reserva com status "${this.status}"`);
     }
+    if (!this.cancelamentoPermitido(agora)) {
+      throw new ConflitoEstadoError('cancelamento só é permitido até 48 horas antes do evento');
+    }
     this.status = STATUS_RESERVA.CANCELADA;
     this.atualizadoEm = agora;
   }
@@ -80,6 +96,9 @@ class Reserva {
   cancelarPeloPrestador(agora = new Date()) {
     if (this.status === STATUS_RESERVA.CANCELADA || this.status === STATUS_RESERVA.RECUSADA) {
       throw new ConflitoEstadoError(`reserva já está em estado final: "${this.status}"`);
+    }
+    if (!this.cancelamentoPermitido(agora)) {
+      throw new ConflitoEstadoError('cancelamento só é permitido até 48 horas antes do evento');
     }
     this.status = STATUS_RESERVA.CANCELADA;
     this.atualizadoEm = agora;
