@@ -1,3 +1,5 @@
+const { parseIntParam } = require('../utils/parseIntParam');
+
 function reservaParaDTO(reserva) {
   return {
     id: reserva.id,
@@ -61,7 +63,7 @@ class ReservaController {
 
   aprovar(req, res, next) {
     try {
-      const reservaId = Number(req.params.id);
+      const reservaId = parseIntParam(req.params.id, 'reservaId');
       const reserva = this.aprovarReserva.executar({
         reservaId,
         prestadorId: req.usuario.id,
@@ -74,7 +76,7 @@ class ReservaController {
 
   recusar(req, res, next) {
     try {
-      const reservaId = Number(req.params.id);
+      const reservaId = parseIntParam(req.params.id, 'reservaId');
       const reserva = this.recusarReserva.executar({
         reservaId,
         prestadorId: req.usuario.id,
@@ -87,7 +89,7 @@ class ReservaController {
 
   cancelar(req, res, next) {
     try {
-      const reservaId = Number(req.params.id);
+      const reservaId = parseIntParam(req.params.id, 'reservaId');
       const reserva = this.cancelarReserva.executar({
         reservaId,
         usuarioId: req.usuario.id,

@@ -1,3 +1,5 @@
+const { parseIntParam } = require('../utils/parseIntParam');
+
 function salaoParaDTO(salao) {
   return {
     id: salao.id,
@@ -83,7 +85,7 @@ class SalaoController {
 
   obter(req, res, next) {
     try {
-      const id = Number(req.params.id);
+      const id = parseIntParam(req.params.id);
       const salao = this.obterSalao.executar({ id });
       return res.json(salaoParaDTO(salao));
     } catch (err) {
@@ -105,7 +107,7 @@ class SalaoController {
 
   atualizar(req, res, next) {
     try {
-      const id = Number(req.params.id);
+      const id = parseIntParam(req.params.id);
       const salao = this.atualizarSalao.executar({
         id,
         prestadorId: req.usuario.id,
@@ -119,7 +121,7 @@ class SalaoController {
 
   excluir(req, res, next) {
     try {
-      const id = Number(req.params.id);
+      const id = parseIntParam(req.params.id);
       this.excluirSalao.executar({ id, prestadorId: req.usuario.id });
       return res.status(204).send();
     } catch (err) {
@@ -129,7 +131,7 @@ class SalaoController {
 
   putHorarios(req, res, next) {
     try {
-      const salaoId = Number(req.params.id);
+      const salaoId = parseIntParam(req.params.id, 'salaoId');
       const horarios = (req.body && req.body.horarios) || [];
       const result = this.definirHorarios.executar({
         salaoId,
@@ -144,7 +146,7 @@ class SalaoController {
 
   adicionarBloqueio(req, res, next) {
     try {
-      const salaoId = Number(req.params.id);
+      const salaoId = parseIntParam(req.params.id, 'salaoId');
       const bloqueio = this.criarBloqueio.executar({
         salaoId,
         prestadorId: req.usuario.id,
@@ -158,7 +160,7 @@ class SalaoController {
 
   listarBloqueiosDoSalao(req, res, next) {
     try {
-      const salaoId = Number(req.params.id);
+      const salaoId = parseIntParam(req.params.id, 'salaoId');
       const lista = this.listarBloqueios.executar({
         salaoId,
         prestadorId: req.usuario.id,
@@ -171,8 +173,8 @@ class SalaoController {
 
   removerBloqueioDoSalao(req, res, next) {
     try {
-      const salaoId = Number(req.params.id);
-      const bloqueioId = Number(req.params.bloqId);
+      const salaoId = parseIntParam(req.params.id, 'salaoId');
+      const bloqueioId = parseIntParam(req.params.bloqId, 'bloqId');
       this.removerBloqueio.executar({
         salaoId,
         bloqueioId,
