@@ -1,0 +1,132 @@
+@startuml
+title FestaLink — Modelo Lógico de Dados (SQLite)
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundCorner 10
+skinparam defaultFontName "Helvetica"
+skinparam entity {
+  BackgroundColor #F5F7FB
+  BorderColor #4B5563
+  FontColor #111827
+}
+skinparam note {
+  BackgroundColor #FFF7E6
+  BorderColor #B58900
+}
+
+entity "usuarios" as usuarios {
+  *id : INTEGER PK AUTOINCREMENT
+  --
+  nome : TEXT NOT NULL
+  email : TEXT NOT NULL UNIQUE
+  senha_hash : TEXT NOT NULL
+  papel : TEXT NOT NULL
+  deletado_em : DATETIME
+  criado_em : DATETIME DEFAULT CURRENT_TIMESTAMP
+}
+
+entity "saloes" as saloes {
+  *id : INTEGER PK AUTOINCREMENT
+  --
+  +prestador_id : INTEGER NOT NULL FK
+  nome : TEXT NOT NULL
+  descricao : TEXT
+  endereco : TEXT NOT NULL
+  capacidade_max : INTEGER NOT NULL
+  valor_diaria : REAL NOT NULL
+  area_m2 : INTEGER
+  tem_estacionamento : INTEGER
+  tem_cozinha : INTEGER
+  permite_musica_ao_vivo : INTEGER
+  aceita_pets : INTEGER
+  regras_adicionais : TEXT
+  deletado_em : DATETIME
+  criado_em : DATETIME DEFAULT CURRENT_TIMESTAMP
+}
+
+entity "horarios_funcionamento" as horarios {
+  *id : INTEGER PK AUTOINCREMENT
+  --
+  +salao_id : INTEGER NOT NULL FK ON DELETE CASCADE
+  dia_semana : INTEGER NOT NULL (0..6)
+  abre_em : TEXT NOT NULL (HH:MM)
+  fecha_em : TEXT NOT NULL (HH:MM)
+  --
+  UNIQUE (salao_id, dia_semana)
+}
+
+entity "bloqueios_data" as bloqueios {
+  *id : INTEGER PK AUTOINCREMENT
+  --
+  +salao_id : INTEGER NOT NULL FK ON DELETE CASCADE
+  data : DATE NOT NULL
+  hora_inicio : TEXT NOT NULL (HH:MM)
+  hora_fim : TEXT NOT NULL (HH:MM)
+  motivo : TEXT
+}
+
+entity "reservas" as reservas {
+  *id : INTEGER PK AUTOINCREMENT
+  --
+  +cliente_id : INTEGER NOT NULL FK
+  +salao_id : INTEGER NOT NULL FK
+  data_evento : DATE NOT NULL
+  hora_inicio : TEXT NOT NULL (HH:MM)
+  hora_fim : TEXT NOT NULL (HH:MM)
+  status : TEXT NOT NULL
+  criado_em : DATETIME DEFAULT CURRENT_TIMESTAMP
+  atualizado_em : DATETIME
+  deletado_em : DATETIME
+}
+
+entity "avaliacoes" as avaliacoes {
+  *id : INTEGER PK AUTOINCREMENT
+  --
+  +reserva_id : INTEGER NOT NULL UNIQUE FK
+  nota : INTEGER NOT NULL (1..5)
+  comentario : TEXT
+  postada_em : DATETIME DEFAULT CURRENT_TIMESTAMP
+  resposta_prestador : TEXT
+  respondida_em : DATETIME
+}
+
+usuarios ||--o{ saloes : prestador_id
+saloes ||--o{ horarios : salao_id (CASCADE)
+saloes ||--o{ bloqueios : salao_id (CASCADE)
+usuarios ||--o{ reservas : cliente_id
+saloes ||--o{ reservas : salao_id
+reservas ||--o| avaliacoes : reserva_id
+
+note as N1
+  Soft delete (coluna deletado_em) em
+  usuarios, saloes e reservas: o registro
+  fica oculto nas listagens normais mas
+  mantém o histórico de avaliações e
+  relatórios.
+
+  Hard delete com ON DELETE CASCADE em
+  horarios_funcionamento e bloqueios_data:
+  são dados de configuração corrente,
+  sem valor histórico.
+
+  CHECK constraints (não detalhados nas
+  caixas para legibilidade): status de
+  reserva em (pendente, aprovada, recusada,
+  cancelada); papel de usuário em (cliente,
+  prestador); dia_semana entre 0 e 6;
+  nota entre 1 e 5.
+
+  Índices recomendados:
+  saloes(prestador_id, deletado_em),
+  reservas(cliente_id), reservas(salao_id,
+  data_evento), reservas(status),
+  bloqueios_data(salao_id, data).
+
+  valor_diaria como REAL atende ao escopo
+  acadêmico. Em produção seria preferível
+  INTEGER em centavos para evitar
+  imprecisão de ponto flutuante.
+end note
+
+@enduml
