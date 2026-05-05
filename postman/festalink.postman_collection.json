@@ -1,0 +1,3101 @@
+{
+  "info": {
+    "_postman_id": "f7595cc6-24f0-4ebd-a711-ffa789085f6f",
+    "name": "FestaLink API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Coleção de testes para a API REST do FestaLink (Sprint 1).\n\nA coleção foi montada para rodar em ordem: registrar usuários, autenticar, criar salão, configurar horários e bloqueios, criar reserva, aprovar, avaliar e responder. As variáveis de coleção (tokens, ids) são preenchidas automaticamente pelos test scripts conforme cada request bem-sucedido.\n\nA pasta \"Cenários alternativos\" no final agrupa requests que normalmente retornam erro esperado (409 ou 403) quando rodados após o fluxo principal — são úteis para demonstrar as validações de negócio.\n\nBase URL padrão: http://localhost:3000"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "tokenPrestador",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tokenCliente",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "prestadorId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "clienteId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "salaoId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "bloqueioId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "reservaId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "avaliacaoId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Registrar prestador (Maria)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Maria Albuquerque\",\n  \"email\": \"maria.alb@test.com\",\n  \"senha\": \"senha123\",\n  \"papel\": \"prestador\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/registrar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "registrar"
+              ]
+            },
+            "description": "Cria conta com perfil prestador. O perfil é definido no cadastro e não pode ser trocado depois."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nome\": \"Maria Albuquerque\",\n  \"email\": \"maria.alb@test.com\",\n  \"senha\": \"senha123\",\n  \"papel\": \"prestador\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/registrar",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "registrar"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": 1,\n  \"nome\": \"Maria Albuquerque\",\n  \"email\": \"maria.alb@test.com\",\n  \"papel\": \"prestador\",\n  \"criadoEm\": \"2026-05-05 10:00:00\"\n}"
+            },
+            {
+              "name": "409 email duplicado",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nome\": \"Maria Albuquerque\",\n  \"email\": \"maria.alb@test.com\",\n  \"senha\": \"senha123\",\n  \"papel\": \"prestador\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/registrar",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "registrar"
+                  ]
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"email já cadastrado\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Registrar cliente (João)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"João Silva\",\n  \"email\": \"joao.silva@test.com\",\n  \"senha\": \"senha123\",\n  \"papel\": \"cliente\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/registrar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "registrar"
+              ]
+            },
+            "description": "Cria conta com perfil cliente."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nome\": \"João Silva\",\n  \"email\": \"joao.silva@test.com\",\n  \"senha\": \"senha123\",\n  \"papel\": \"cliente\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/registrar",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "registrar"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": 2,\n  \"nome\": \"João Silva\",\n  \"email\": \"joao.silva@test.com\",\n  \"papel\": \"cliente\",\n  \"criadoEm\": \"2026-05-05 10:00:00\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login prestador (Maria)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  pm.collectionVariables.set('tokenPrestador', json.token);",
+                  "  pm.collectionVariables.set('prestadorId', json.usuario.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"maria.alb@test.com\",\n  \"senha\": \"senha123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Devolve um token JWT e os dados públicos do usuário. O token tem validade de 7 dias por padrão (configurável via JWT_EXPIRES_IN). O test script salva o token e o id em variáveis de coleção para os próximos requests."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"maria.alb@test.com\",\n  \"senha\": \"senha123\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n  \"usuario\": {\n    \"id\": 1,\n    \"nome\": \"Maria Albuquerque\",\n    \"email\": \"maria.alb@test.com\",\n    \"papel\": \"prestador\",\n    \"criadoEm\": \"2026-05-05 10:00:00\"\n  }\n}"
+            },
+            {
+              "name": "401 credenciais inválidas",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"maria.alb@test.com\",\n  \"senha\": \"senha123\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"credenciais inválidas\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login cliente (João)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  pm.collectionVariables.set('tokenCliente', json.token);",
+                  "  pm.collectionVariables.set('clienteId', json.usuario.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"joao.silva@test.com\",\n  \"senha\": \"senha123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"joao.silva@test.com\",\n  \"senha\": \"senha123\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n  \"usuario\": {\n    \"id\": 2,\n    \"nome\": \"João Silva\",\n    \"email\": \"joao.silva@test.com\",\n    \"papel\": \"cliente\",\n    \"criadoEm\": \"2026-05-05 10:00:00\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Eu (perfil autenticado)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Retorna o perfil do usuário autenticado pelo token."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{tokenCliente}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/auth/me",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "me"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": 2,\n  \"nome\": \"João Silva\",\n  \"email\": \"joao.silva@test.com\",\n  \"papel\": \"cliente\",\n  \"criadoEm\": \"2026-05-05 10:00:00\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Salões",
+      "item": [
+        {
+          "name": "Criar salão",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  pm.collectionVariables.set('salaoId', pm.response.json().id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenPrestador}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Espaço Aurora\",\n  \"descricao\": \"Salão completo para festas e eventos com até 150 pessoas.\",\n  \"endereco\": \"Rua das Palmeiras, 1200 - Belo Horizonte, MG\",\n  \"capacidadeMax\": 150,\n  \"valorDiaria\": 2500,\n  \"areaM2\": 300,\n  \"temEstacionamento\": true,\n  \"temCozinha\": true,\n  \"permiteMusicaAoVivo\": true,\n  \"aceitaPets\": false,\n  \"regrasAdicionais\": \"Encerramento da música até 02h. Reposição de itens danificados é responsabilidade do cliente.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/saloes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "saloes"
+              ]
+            },
+            "description": "Apenas usuários com papel \"prestador\" podem cadastrar salões. O id retornado é salvo na variável salaoId para os próximos requests."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{tokenPrestador}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nome\": \"Espaço Aurora\",\n  \"descricao\": \"Salão completo para festas e eventos com até 150 pessoas.\",\n  \"endereco\": \"Rua das Palmeiras, 1200 - Belo Horizonte, MG\",\n  \"capacidadeMax\": 150,\n  \"valorDiaria\": 2500,\n  \"areaM2\": 300,\n  \"temEstacionamento\": true,\n  \"temCozinha\": true,\n  \"permiteMusicaAoVivo\": true,\n  \"aceitaPets\": false,\n  \"regrasAdicionais\": \"Encerramento da música até 02h. Reposição de itens danificados é responsabilidade do cliente.\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/saloes",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "saloes"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": 1,\n  \"prestadorId\": 1,\n  \"nome\": \"Espaço Aurora\",\n  \"descricao\": \"Salão completo para festas e eventos com até 150 pessoas.\",\n  \"endereco\": \"Rua das Palmeiras, 1200 - Belo Horizonte, MG\",\n  \"capacidadeMax\": 150,\n  \"valorDiaria\": 2500,\n  \"areaM2\": 300,\n  \"temEstacionamento\": true,\n  \"temCozinha\": true,\n  \"permiteMusicaAoVivo\": true,\n  \"aceitaPets\": false,\n  \"regrasAdicionais\": \"Encerramento da música até 02h. Reposição de itens danificados é responsabilidade do cliente.\",\n  \"criadoEm\": \"2026-05-05 10:00:00\"\n}"
+            },
+            {
+              "name": "403 sem papel prestador",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{tokenPrestador}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nome\": \"Espaço Aurora\",\n  \"descricao\": \"Salão completo para festas e eventos com até 150 pessoas.\",\n  \"endereco\": \"Rua das Palmeiras, 1200 - Belo Horizonte, MG\",\n  \"capacidadeMax\": 150,\n  \"valorDiaria\": 2500,\n  \"areaM2\": 300,\n  \"temEstacionamento\": true,\n  \"temCozinha\": true,\n  \"permiteMusicaAoVivo\": true,\n  \"aceitaPets\": false,\n  \"regrasAdicionais\": \"Encerramento da música até 02h. Reposição de itens danificados é responsabilidade do cliente.\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/saloes",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "saloes"
+                  ]
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"papel não autorizado para este recurso\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Listar salões (todos)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/saloes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "saloes"
+              ]
+            },
+            "description": "Lista pública para usuários autenticados. Soft-deletados são filtrados."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{tokenCliente}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/saloes",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "saloes"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "[\n  {\n    \"id\": 1,\n    \"prestadorId\": 1,\n    \"nome\": \"Espaço Aurora\",\n    \"endereco\": \"Rua das Palmeiras, 1200\",\n    \"capacidadeMax\": 150,\n    \"valorDiaria\": 2500\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Listar meus salões (prestador)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenPrestador}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/saloes/meus",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "saloes",
+                "meus"
+              ]
+            },
+            "description": "Apenas usuários com papel \"prestador\". Retorna os salões cujo prestador_id é o do JWT."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{tokenPrestador}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/saloes/meus",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "saloes",
+                    "meus"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "[\n  {\n    \"id\": 1,\n    \"prestadorId\": 1,\n    \"nome\": \"Espaço Aurora\"\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Detalhe de um salão",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/saloes/{{salaoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "saloes",
+                "{{salaoId}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{tokenCliente}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/saloes/{{salaoId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "saloes",
+                    "{{salaoId}}"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": 1,\n  \"prestadorId\": 1,\n  \"nome\": \"Espaço Aurora\",\n  \"capacidadeMax\": 150,\n  \"valorDiaria\": 2500\n}"
+            },
+            {
+              "name": "404 não encontrado",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{tokenCliente}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/saloes/{{salaoId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "saloes",
+                    "{{salaoId}}"
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"salão não encontrado\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Atualizar salão",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenPrestador}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Espaço Aurora — atualizado\",\n  \"descricao\": \"Salão completo para festas e eventos com até 200 pessoas.\",\n  \"endereco\": \"Rua das Palmeiras, 1200 - Belo Horizonte, MG\",\n  \"capacidadeMax\": 200,\n  \"valorDiaria\": 2800,\n  \"areaM2\": 300,\n  \"temEstacionamento\": true,\n  \"temCozinha\": true,\n  \"permiteMusicaAoVivo\": true,\n  \"aceitaPets\": true,\n  \"regrasAdicionais\": \"Encerramento da música até 02h.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/saloes/{{salaoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "saloes",
+                "{{salaoId}}"
+              ]
+            },
+            "description": "Substituição completa dos dados (PUT). Apenas o prestador dono do salão pode atualizar."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{tokenPrestador}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nome\": \"Espaço Aurora — atualizado\",\n  \"descricao\": \"Salão completo para festas e eventos com até 200 pessoas.\",\n  \"endereco\": \"Rua das Palmeiras, 1200 - Belo Horizonte, MG\",\n  \"capacidadeMax\": 200,\n  \"valorDiaria\": 2800,\n  \"areaM2\": 300,\n  \"temEstacionamento\": true,\n  \"temCozinha\": true,\n  \"permiteMusicaAoVivo\": true,\n  \"aceitaPets\": true,\n  \"regrasAdicionais\": \"Encerramento da música até 02h.\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/saloes/{{salaoId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "saloes",
+                    "{{salaoId}}"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": 1,\n  \"nome\": \"Espaço Aurora — atualizado\",\n  \"capacidadeMax\": 200,\n  \"valorDiaria\": 2800\n}"
+            },
+            {
+              "name": "403 não é dono",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{tokenPrestador}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nome\": \"Espaço Aurora — atualizado\",\n  \"descricao\": \"Salão completo para festas e eventos com até 200 pessoas.\",\n  \"endereco\": \"Rua das Palmeiras, 1200 - Belo Horizonte, MG\",\n  \"capacidadeMax\": 200,\n  \"valorDiaria\": 2800,\n  \"areaM2\": 300,\n  \"temEstacionamento\": true,\n  \"temCozinha\": true,\n  \"permiteMusicaAoVivo\": true,\n  \"aceitaPets\": true,\n  \"regrasAdicionais\": \"Encerramento da música até 02h.\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/saloes/{{salaoId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "saloes",
+                    "{{salaoId}}"
+                  ]
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"salão pertence a outro prestador\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Horários e Bloqueios",
+      "item": [
+        {
+          "name": "Definir grade semanal de horários",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenPrestador}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"horarios\": [\n    {\n      \"diaSemana\": 5,\n      \"abreEm\": \"18:00\",\n      \"fechaEm\": \"23:59\"\n    },\n    {\n      \"diaSemana\": 6,\n      \"abreEm\": \"12:00\",\n      \"fechaEm\": \"23:59\"\n    },\n    {\n      \"diaSemana\": 0,\n      \"abreEm\": \"12:00\",\n      \"fechaEm\": \"22:00\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/saloes/{{salaoId}}/horarios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "saloes",
+                "{{salaoId}}",
+                "horarios"
+              ]
+            },
+            "description": "Substitui a grade inteira da semana. Dia da semana: 0=domingo, 1=segunda, ..., 6=sábado. Não pode haver dias duplicados na lista."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{tokenPrestador}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"horarios\": [\n    {\n      \"diaSemana\": 5,\n      \"abreEm\": \"18:00\",\n      \"fechaEm\": \"23:59\"\n    },\n    {\n      \"diaSemana\": 6,\n      \"abreEm\": \"12:00\",\n      \"fechaEm\": \"23:59\"\n    },\n    {\n      \"diaSemana\": 0,\n      \"abreEm\": \"12:00\",\n      \"fechaEm\": \"22:00\"\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/saloes/{{salaoId}}/horarios",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "saloes",
+                    "{{salaoId}}",
+                    "horarios"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "[\n  {\n    \"id\": 3,\n    \"salaoId\": 1,\n    \"diaSemana\": 0,\n    \"abreEm\": \"12:00\",\n    \"fechaEm\": \"22:00\"\n  },\n  {\n    \"id\": 1,\n    \"salaoId\": 1,\n    \"diaSemana\": 5,\n    \"abreEm\": \"18:00\",\n    \"fechaEm\": \"23:59\"\n  },\n  {\n    \"id\": 2,\n    \"salaoId\": 1,\n    \"diaSemana\": 6,\n    \"abreEm\": \"12:00\",\n    \"fechaEm\": \"23:59\"\n  }\n]"
+            },
+            {
+              "name": "400 dia duplicado",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{tokenPrestador}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"horarios\": [\n    {\n      \"diaSemana\": 5,\n      \"abreEm\": \"18:00\",\n      \"fechaEm\": \"23:59\"\n    },\n    {\n      \"diaSemana\": 6,\n      \"abreEm\": \"12:00\",\n      \"fechaEm\": \"23:59\"\n    },\n    {\n      \"diaSemana\": 0,\n      \"abreEm\": \"12:00\",\n      \"fechaEm\": \"22:00\"\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/saloes/{{salaoId}}/horarios",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "saloes",
+                    "{{salaoId}}",
+                    "horarios"
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"dia da semana duplicado: 5\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Cadastrar bloqueio pontual",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  pm.collectionVariables.set('bloqueioId', pm.response.json().id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenPrestador}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": \"2026-12-25\",\n  \"horaInicio\": \"00:00\",\n  \"horaFim\": \"23:59\",\n  \"motivo\": \"Natal — salão fechado\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/saloes/{{salaoId}}/bloqueios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "saloes",
+                "{{salaoId}}",
+                "bloqueios"
+              ]
+            },
+            "description": "Bloqueia uma data específica, sobrescrevendo a grade semanal. Pode ser dia inteiro ou um intervalo."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{tokenPrestador}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"data\": \"2026-12-25\",\n  \"horaInicio\": \"00:00\",\n  \"horaFim\": \"23:59\",\n  \"motivo\": \"Natal — salão fechado\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/saloes/{{salaoId}}/bloqueios",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "saloes",
+                    "{{salaoId}}",
+                    "bloqueios"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": 1,\n  \"salaoId\": 1,\n  \"data\": \"2026-12-25\",\n  \"horaInicio\": \"00:00\",\n  \"horaFim\": \"23:59\",\n  \"motivo\": \"Natal — salão fechado\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Listar bloqueios do salão",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenPrestador}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/saloes/{{salaoId}}/bloqueios",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "saloes",
+                "{{salaoId}}",
+                "bloqueios"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{tokenPrestador}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/saloes/{{salaoId}}/bloqueios",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "saloes",
+                    "{{salaoId}}",
+                    "bloqueios"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "[\n  {\n    \"id\": 1,\n    \"salaoId\": 1,\n    \"data\": \"2026-12-25\",\n    \"horaInicio\": \"00:00\",\n    \"horaFim\": \"23:59\",\n    \"motivo\": \"Natal — salão fechado\"\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Remover bloqueio",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenPrestador}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/saloes/{{salaoId}}/bloqueios/{{bloqueioId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "saloes",
+                "{{salaoId}}",
+                "bloqueios",
+                "{{bloqueioId}}"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "204 No Content",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{tokenPrestador}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/saloes/{{salaoId}}/bloqueios/{{bloqueioId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "saloes",
+                    "{{salaoId}}",
+                    "bloqueios",
+                    "{{bloqueioId}}"
+                  ]
+                }
+              },
+              "status": "No Content",
+              "code": 204,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Reservas",
+      "item": [
+        {
+          "name": "Criar reserva",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  pm.collectionVariables.set('reservaId', pm.response.json().id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"salaoId\": \"{{salaoId}}\",\n  \"dataEvento\": \"2026-04-17\",\n  \"horaInicio\": \"19:00\",\n  \"horaFim\": \"23:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reservas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reservas"
+              ]
+            },
+            "description": "Apenas clientes podem criar reservas. Para que a avaliação funcione no fluxo seguinte, escolhi uma data passada (sexta, 17/04/2026). Em uso real, a data será futura.\n\nValidações: dia da semana precisa estar na grade do salão, horário precisa caber na janela de funcionamento, não pode conflitar com bloqueios nem com outras reservas pendentes/aprovadas na mesma data."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{tokenCliente}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"salaoId\": \"{{salaoId}}\",\n  \"dataEvento\": \"2026-04-17\",\n  \"horaInicio\": \"19:00\",\n  \"horaFim\": \"23:00\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/reservas",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "reservas"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": 1,\n  \"clienteId\": 2,\n  \"salaoId\": 1,\n  \"dataEvento\": \"2026-04-17\",\n  \"horaInicio\": \"19:00\",\n  \"horaFim\": \"23:00\",\n  \"status\": \"pendente\",\n  \"criadoEm\": \"2026-05-05 10:00:00\",\n  \"atualizadoEm\": null\n}"
+            },
+            {
+              "name": "409 fora do horário",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{tokenCliente}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"salaoId\": \"{{salaoId}}\",\n  \"dataEvento\": \"2026-04-17\",\n  \"horaInicio\": \"19:00\",\n  \"horaFim\": \"23:00\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/reservas",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "reservas"
+                  ]
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"horário pedido está fora do horário de funcionamento do salão\"\n}"
+            },
+            {
+              "name": "409 conflito de reserva",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{tokenCliente}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"salaoId\": \"{{salaoId}}\",\n  \"dataEvento\": \"2026-04-17\",\n  \"horaInicio\": \"19:00\",\n  \"horaFim\": \"23:00\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/reservas",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "reservas"
+                  ]
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"já existe uma reserva ativa que conflita com esse horário\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Listar minhas reservas (cliente)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reservas/minhas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reservas",
+                "minhas"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{tokenCliente}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/reservas/minhas",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "reservas",
+                    "minhas"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "[\n  {\n    \"id\": 1,\n    \"clienteId\": 2,\n    \"salaoId\": 1,\n    \"status\": \"pendente\"\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Listar reservas recebidas (prestador)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenPrestador}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reservas/recebidas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reservas",
+                "recebidas"
+              ]
+            },
+            "description": "Lista todas as reservas dos salões ativos do prestador autenticado. Salões arquivados (soft-delete) são filtrados."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{tokenPrestador}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/reservas/recebidas",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "reservas",
+                    "recebidas"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "[\n  {\n    \"id\": 1,\n    \"clienteId\": 2,\n    \"salaoId\": 1,\n    \"status\": \"pendente\"\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Aprovar reserva",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenPrestador}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reservas/{{reservaId}}/aprovar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reservas",
+                "{{reservaId}}",
+                "aprovar"
+              ]
+            },
+            "description": "Apenas o prestador dono do salão pode aprovar. Só funciona se a reserva está em status \"pendente\"."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{tokenPrestador}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/reservas/{{reservaId}}/aprovar",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "reservas",
+                    "{{reservaId}}",
+                    "aprovar"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": 1,\n  \"clienteId\": 2,\n  \"salaoId\": 1,\n  \"dataEvento\": \"2026-04-17\",\n  \"horaInicio\": \"19:00\",\n  \"horaFim\": \"23:00\",\n  \"status\": \"aprovada\",\n  \"criadoEm\": \"2026-05-05 10:00:00\",\n  \"atualizadoEm\": \"2026-05-05T10:00:01.000Z\"\n}"
+            },
+            {
+              "name": "409 status inválido",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{tokenPrestador}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/reservas/{{reservaId}}/aprovar",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "reservas",
+                    "{{reservaId}}",
+                    "aprovar"
+                  ]
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"não dá pra aprovar uma reserva com status \\\"aprovada\\\"\"\n}"
+            },
+            {
+              "name": "404 salão arquivado",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{tokenPrestador}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/reservas/{{reservaId}}/aprovar",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "reservas",
+                    "{{reservaId}}",
+                    "aprovar"
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"salão dessa reserva não está mais disponível\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Avaliações",
+      "item": [
+        {
+          "name": "Postar avaliação",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  pm.collectionVariables.set('avaliacaoId', pm.response.json().id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nota\": 5,\n  \"comentario\": \"Salão lindo, atendimento excelente. Recomendo!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reservas/{{reservaId}}/avaliacao",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reservas",
+                "{{reservaId}}",
+                "avaliacao"
+              ]
+            },
+            "description": "Apenas o cliente da reserva pode postar. A reserva precisa estar com status \"aprovada\" e a data do evento precisa já ter passado. Cada reserva permite no máximo uma avaliação."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{tokenCliente}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nota\": 5,\n  \"comentario\": \"Salão lindo, atendimento excelente. Recomendo!\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/reservas/{{reservaId}}/avaliacao",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "reservas",
+                    "{{reservaId}}",
+                    "avaliacao"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": 1,\n  \"reservaId\": 1,\n  \"nota\": 5,\n  \"comentario\": \"Salão lindo, atendimento excelente. Recomendo!\",\n  \"postadaEm\": \"2026-05-05 10:00:00\",\n  \"respostaPrestador\": null,\n  \"respondidaEm\": null\n}"
+            },
+            {
+              "name": "409 reserva não concluída",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{tokenCliente}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nota\": 5,\n  \"comentario\": \"Salão lindo, atendimento excelente. Recomendo!\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/reservas/{{reservaId}}/avaliacao",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "reservas",
+                    "{{reservaId}}",
+                    "avaliacao"
+                  ]
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"reserva ainda não pode ser avaliada (precisa estar aprovada e a data já ter passado)\"\n}"
+            },
+            {
+              "name": "409 já avaliada",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{tokenCliente}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nota\": 5,\n  \"comentario\": \"Salão lindo, atendimento excelente. Recomendo!\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/reservas/{{reservaId}}/avaliacao",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "reservas",
+                    "{{reservaId}}",
+                    "avaliacao"
+                  ]
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"reserva já tem avaliação postada\"\n}"
+            },
+            {
+              "name": "404 salão arquivado",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{tokenCliente}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nota\": 5,\n  \"comentario\": \"Salão lindo, atendimento excelente. Recomendo!\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/reservas/{{reservaId}}/avaliacao",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "reservas",
+                    "{{reservaId}}",
+                    "avaliacao"
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"salão dessa reserva não está mais disponível\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Listar avaliações do salão",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/saloes/{{salaoId}}/avaliacoes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "saloes",
+                "{{salaoId}}",
+                "avaliacoes"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{tokenCliente}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/saloes/{{salaoId}}/avaliacoes",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "saloes",
+                    "{{salaoId}}",
+                    "avaliacoes"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "[\n  {\n    \"id\": 1,\n    \"reservaId\": 1,\n    \"nota\": 5,\n    \"comentario\": \"Salão lindo, atendimento excelente. Recomendo!\",\n    \"respostaPrestador\": null\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Editar avaliação (cliente)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nota\": 4,\n  \"comentario\": \"Salão muito bom, mas o estacionamento é apertado.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/reservas/{{reservaId}}/avaliacao",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reservas",
+                "{{reservaId}}",
+                "avaliacao"
+              ]
+            },
+            "description": "Cliente pode editar a avaliação enquanto o prestador não responder. Após resposta, fica congelada."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{tokenCliente}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nota\": 4,\n  \"comentario\": \"Salão muito bom, mas o estacionamento é apertado.\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/reservas/{{reservaId}}/avaliacao",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "reservas",
+                    "{{reservaId}}",
+                    "avaliacao"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": 1,\n  \"reservaId\": 1,\n  \"nota\": 4,\n  \"comentario\": \"Salão muito bom, mas o estacionamento é apertado.\"\n}"
+            },
+            {
+              "name": "409 já respondida",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{tokenCliente}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nota\": 4,\n  \"comentario\": \"Salão muito bom, mas o estacionamento é apertado.\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/reservas/{{reservaId}}/avaliacao",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "reservas",
+                    "{{reservaId}}",
+                    "avaliacao"
+                  ]
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"avaliação não pode mais ser editada (prestador já respondeu)\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Excluir avaliação (cliente)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reservas/{{reservaId}}/avaliacao",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reservas",
+                "{{reservaId}}",
+                "avaliacao"
+              ]
+            },
+            "description": "Mesmo gating da edição: só funciona enquanto não houver resposta do prestador."
+          },
+          "response": [
+            {
+              "name": "204 No Content",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{tokenCliente}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/reservas/{{reservaId}}/avaliacao",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "reservas",
+                    "{{reservaId}}",
+                    "avaliacao"
+                  ]
+                }
+              },
+              "status": "No Content",
+              "code": 204,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": ""
+            },
+            {
+              "name": "409 já respondida",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{tokenCliente}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/reservas/{{reservaId}}/avaliacao",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "reservas",
+                    "{{reservaId}}",
+                    "avaliacao"
+                  ]
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"avaliação não pode mais ser excluída (prestador já respondeu)\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Respostas",
+      "item": [
+        {
+          "name": "Postar resposta (prestador)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenPrestador}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"texto\": \"Obrigada pelo feedback! Foi um prazer receber vocês.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/avaliacoes/{{avaliacaoId}}/resposta",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "avaliacoes",
+                "{{avaliacaoId}}",
+                "resposta"
+              ]
+            },
+            "description": "Apenas o prestador dono do salão pode responder. Cada avaliação aceita uma única resposta."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{tokenPrestador}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"texto\": \"Obrigada pelo feedback! Foi um prazer receber vocês.\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/avaliacoes/{{avaliacaoId}}/resposta",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "avaliacoes",
+                    "{{avaliacaoId}}",
+                    "resposta"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": 1,\n  \"reservaId\": 1,\n  \"nota\": 4,\n  \"comentario\": \"Salão muito bom, mas o estacionamento é apertado.\",\n  \"postadaEm\": \"2026-05-05 10:00:00\",\n  \"respostaPrestador\": \"Obrigada pelo feedback! Foi um prazer receber vocês.\",\n  \"respondidaEm\": \"2026-05-05T10:00:02.000Z\"\n}"
+            },
+            {
+              "name": "409 já respondida",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{tokenPrestador}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"texto\": \"Obrigada pelo feedback! Foi um prazer receber vocês.\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/avaliacoes/{{avaliacaoId}}/resposta",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "avaliacoes",
+                    "{{avaliacaoId}}",
+                    "resposta"
+                  ]
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"esta avaliação já foi respondida\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Editar resposta (prestador, dentro de 24h)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenPrestador}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"texto\": \"Obrigada pelo feedback! Vamos avaliar como melhorar o estacionamento.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/avaliacoes/{{avaliacaoId}}/resposta",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "avaliacoes",
+                "{{avaliacaoId}}",
+                "resposta"
+              ]
+            },
+            "description": "Edição da resposta só funciona dentro das 24h após a postagem."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{tokenPrestador}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"texto\": \"Obrigada pelo feedback! Vamos avaliar como melhorar o estacionamento.\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/avaliacoes/{{avaliacaoId}}/resposta",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "avaliacoes",
+                    "{{avaliacaoId}}",
+                    "resposta"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": 1,\n  \"reservaId\": 1,\n  \"respostaPrestador\": \"Obrigada pelo feedback! Vamos avaliar como melhorar o estacionamento.\",\n  \"respondidaEm\": \"2026-05-05T10:00:02.000Z\"\n}"
+            },
+            {
+              "name": "409 fora da janela",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{tokenPrestador}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"texto\": \"Obrigada pelo feedback! Vamos avaliar como melhorar o estacionamento.\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/avaliacoes/{{avaliacaoId}}/resposta",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "avaliacoes",
+                    "{{avaliacaoId}}",
+                    "resposta"
+                  ]
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"resposta fora da janela de 24h ou ainda não postada\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Excluir resposta (prestador, dentro de 24h)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenPrestador}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/avaliacoes/{{avaliacaoId}}/resposta",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "avaliacoes",
+                "{{avaliacaoId}}",
+                "resposta"
+              ]
+            },
+            "description": "Excluir a resposta libera de novo a edição da avaliação pelo cliente."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{tokenPrestador}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/avaliacoes/{{avaliacaoId}}/resposta",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "avaliacoes",
+                    "{{avaliacaoId}}",
+                    "resposta"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": 1,\n  \"reservaId\": 1,\n  \"respostaPrestador\": null,\n  \"respondidaEm\": null\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Cenários alternativos",
+      "description": "Requests que retornam erro esperado quando rodados após o fluxo principal. Úteis para demonstrar as validações de negócio.",
+      "item": [
+        {
+          "name": "Recusar reserva (após aprovada)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenPrestador}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reservas/{{reservaId}}/recusar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reservas",
+                "{{reservaId}}",
+                "recusar"
+              ]
+            },
+            "description": "Recusar só funciona em status \"pendente\". Após o fluxo principal a reserva já está aprovada, então este request retorna 409."
+          },
+          "response": [
+            {
+              "name": "409 status inválido",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{tokenPrestador}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/reservas/{{reservaId}}/recusar",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "reservas",
+                    "{{reservaId}}",
+                    "recusar"
+                  ]
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"não dá pra recusar uma reserva com status \\\"aprovada\\\"\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Cancelar reserva (cliente)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reservas/{{reservaId}}/cancelar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reservas",
+                "{{reservaId}}",
+                "cancelar"
+              ]
+            },
+            "description": "Cliente pode cancelar reserva nos status \"pendente\" ou \"aprovada\", desde que faltem mais de 48 horas para o evento. O mesmo limite vale para o prestador (ele cancela trocando o token)."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{tokenCliente}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/reservas/{{reservaId}}/cancelar",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "reservas",
+                    "{{reservaId}}",
+                    "cancelar"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": 1,\n  \"status\": \"cancelada\"\n}"
+            },
+            {
+              "name": "409 dentro de 48h",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{tokenCliente}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/reservas/{{reservaId}}/cancelar",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "reservas",
+                    "{{reservaId}}",
+                    "cancelar"
+                  ]
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"cancelamento só é permitido até 48 horas antes do evento\"\n}"
+            },
+            {
+              "name": "409 já em estado final",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{tokenCliente}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/reservas/{{reservaId}}/cancelar",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "reservas",
+                    "{{reservaId}}",
+                    "cancelar"
+                  ]
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"cliente não pode cancelar reserva com status \\\"cancelada\\\"\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Excluir salão (soft delete)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenPrestador}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/saloes/{{salaoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "saloes",
+                "{{salaoId}}"
+              ]
+            },
+            "description": "Apenas o prestador dono. É um soft delete — o registro fica oculto nas listagens normais mas mantém o histórico de avaliações antigas. A resposta inclui o salão com o campo deletadoEm preenchido."
+          },
+          "response": [
+            {
+              "name": "200 OK + salão arquivado",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{tokenPrestador}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/saloes/{{salaoId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "saloes",
+                    "{{salaoId}}"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"id\": 1,\n  \"prestadorId\": 1,\n  \"nome\": \"Espaço Aurora\",\n  \"descricao\": null,\n  \"endereco\": \"Rua das Palmeiras, 1200 - Belo Horizonte, MG\",\n  \"capacidadeMax\": 150,\n  \"valorDiaria\": 2500,\n  \"areaM2\": 300,\n  \"temEstacionamento\": true,\n  \"temCozinha\": true,\n  \"permiteMusicaAoVivo\": true,\n  \"aceitaPets\": false,\n  \"regrasAdicionais\": null,\n  \"criadoEm\": \"2026-05-05 10:00:00\",\n  \"deletadoEm\": \"2026-05-05T10:00:05.123Z\"\n}"
+            },
+            {
+              "name": "403 não é dono",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{tokenPrestador}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/saloes/{{salaoId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "saloes",
+                    "{{salaoId}}"
+                  ]
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"salão pertence a outro prestador\"\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
