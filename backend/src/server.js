@@ -4,6 +4,7 @@ const { openDatabase } = require('./db/init');
 const { compor } = require('./composition');
 const { criarAuthRoutes } = require('./routes/auth.routes');
 const { criarSaloesRoutes } = require('./routes/saloes.routes');
+const { criarReservasRoutes } = require('./routes/reservas.routes');
 const { errorHandler } = require('./middleware/errorHandler');
 
 openDatabase();
@@ -23,6 +24,12 @@ app.use('/auth', criarAuthRoutes({
 
 app.use('/saloes', criarSaloesRoutes({
   salaoController: ctx.controllers.salaoController,
+  autenticar: ctx.middlewares.autenticar,
+  exigirPapel: ctx.middlewares.exigirPapel,
+}));
+
+app.use('/reservas', criarReservasRoutes({
+  reservaController: ctx.controllers.reservaController,
   autenticar: ctx.middlewares.autenticar,
   exigirPapel: ctx.middlewares.exigirPapel,
 }));
