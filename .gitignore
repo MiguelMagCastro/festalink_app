@@ -50,3 +50,7 @@ desktop.ini
 **/android/app/debug
 **/android/app/profile
 **/android/app/release
+
+
+*.db-shm
+*.db-wal
