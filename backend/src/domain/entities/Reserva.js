@@ -1,4 +1,4 @@
-const { DomainError } = require('../errors/DomainError');
+const { DomainError, ConflitoEstadoError } = require('../errors/DomainError');
 const { Periodo } = require('../valueObjects/Periodo');
 
 const STATUS_RESERVA = Object.freeze({
@@ -53,7 +53,7 @@ class Reserva {
 
   aprovar(agora = new Date()) {
     if (this.status !== STATUS_RESERVA.PENDENTE) {
-      throw new DomainError(`não dá pra aprovar uma reserva com status "${this.status}"`);
+      throw new ConflitoEstadoError(`não dá pra aprovar uma reserva com status "${this.status}"`);
     }
     this.status = STATUS_RESERVA.APROVADA;
     this.atualizadoEm = agora;
@@ -61,7 +61,7 @@ class Reserva {
 
   recusar(agora = new Date()) {
     if (this.status !== STATUS_RESERVA.PENDENTE) {
-      throw new DomainError(`não dá pra recusar uma reserva com status "${this.status}"`);
+      throw new ConflitoEstadoError(`não dá pra recusar uma reserva com status "${this.status}"`);
     }
     this.status = STATUS_RESERVA.RECUSADA;
     this.atualizadoEm = agora;
@@ -71,7 +71,7 @@ class Reserva {
     const permitido = this.status === STATUS_RESERVA.PENDENTE
       || this.status === STATUS_RESERVA.APROVADA;
     if (!permitido) {
-      throw new DomainError(`cliente não pode cancelar reserva com status "${this.status}"`);
+      throw new ConflitoEstadoError(`cliente não pode cancelar reserva com status "${this.status}"`);
     }
     this.status = STATUS_RESERVA.CANCELADA;
     this.atualizadoEm = agora;
@@ -79,7 +79,7 @@ class Reserva {
 
   cancelarPeloPrestador(agora = new Date()) {
     if (this.status === STATUS_RESERVA.CANCELADA || this.status === STATUS_RESERVA.RECUSADA) {
-      throw new DomainError(`reserva já está em estado final: "${this.status}"`);
+      throw new ConflitoEstadoError(`reserva já está em estado final: "${this.status}"`);
     }
     this.status = STATUS_RESERVA.CANCELADA;
     this.atualizadoEm = agora;

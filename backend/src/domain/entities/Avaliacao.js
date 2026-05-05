@@ -1,4 +1,4 @@
-const { DomainError } = require('../errors/DomainError');
+const { DomainError, ConflitoEstadoError } = require('../errors/DomainError');
 
 const JANELA_EDICAO_RESPOSTA_MS = 24 * 60 * 60 * 1000;
 
@@ -49,7 +49,7 @@ class Avaliacao {
 
   responder(texto, agora = new Date()) {
     if (this.foiRespondida()) {
-      throw new DomainError('esta avaliação já foi respondida');
+      throw new ConflitoEstadoError('esta avaliação já foi respondida');
     }
     if (!texto || typeof texto !== 'string') {
       throw new DomainError('texto da resposta obrigatório');
@@ -60,7 +60,7 @@ class Avaliacao {
 
   editarPeloCliente(novaNota, novoComentario) {
     if (!this.clientePodeEditar()) {
-      throw new DomainError('avaliação não pode mais ser editada (prestador já respondeu)');
+      throw new ConflitoEstadoError('avaliação não pode mais ser editada (prestador já respondeu)');
     }
     Avaliacao.validarNota(novaNota);
     this.nota = novaNota;
@@ -69,7 +69,7 @@ class Avaliacao {
 
   editarResposta(novoTexto, agora = new Date()) {
     if (!this.prestadorPodeEditarResposta(agora)) {
-      throw new DomainError('resposta fora da janela de 24h ou ainda não postada');
+      throw new ConflitoEstadoError('resposta fora da janela de 24h ou ainda não postada');
     }
     if (!novoTexto || typeof novoTexto !== 'string') {
       throw new DomainError('novo texto da resposta obrigatório');
@@ -79,7 +79,7 @@ class Avaliacao {
 
   excluirResposta(agora = new Date()) {
     if (!this.prestadorPodeEditarResposta(agora)) {
-      throw new DomainError('resposta fora da janela de 24h ou ainda não postada');
+      throw new ConflitoEstadoError('resposta fora da janela de 24h ou ainda não postada');
     }
     this.respostaPrestador = null;
     this.respondidaEm = null;
