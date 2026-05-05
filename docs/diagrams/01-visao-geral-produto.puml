@@ -24,7 +24,7 @@ rectangle "FestaLink" as sys {
   rectangle "Backend\nREST + MOM\n(Node.js + SQLite)" as back
 }
 
-cliente --> appc : busca salões\ne pede reserva
+cliente --> appc : busca salões e\npede reserva
 prestador --> appp : aprova ou\nrecusa pedidos
 
 appc --> back : HTTPS / REST
@@ -32,24 +32,21 @@ appp --> back : HTTPS / REST
 back ..> appp : evento de\nnovo pedido
 
 note right of cliente
-  **Valor para o cliente**
-  • Achar salões disponíveis sem ligar
-  • Comparar preço, capacidade e data
-  • Saber rápido se a reserva foi aceita
+  Procura salão para um evento,
+  compara opções e acompanha
+  o status do pedido.
 end note
 
 note left of prestador
-  **Valor para o prestador**
-  • Recebe pedidos direto no celular
-  • Aprova ou recusa em poucos toques
-  • Menos vai-e-vem por telefone e WhatsApp
+  Cadastra seus salões e responde
+  pedidos pelo celular.
 end note
 
 note bottom of sys
-  **Diferencial:** mobile-first e event-driven.
-  O prestador é notificado em tempo real
-  quando chega uma nova solicitação,
-  sem depender de polling do app.
+  Apps mobile conversam com o backend
+  por REST. O backend avisa o app do
+  prestador via mensageria quando
+  chega um pedido novo.
 end note
 
 @enduml

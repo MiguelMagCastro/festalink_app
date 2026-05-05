@@ -1,0 +1,50 @@
+@startuml
+title FestaLink — Contexto de Negócio
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundCorner 10
+skinparam defaultFontName "Helvetica"
+skinparam rectangle {
+  BackgroundColor #F5F7FB
+  BorderColor #4B5563
+  FontColor #111827
+}
+skinparam note {
+  BackgroundColor #FFF7E6
+  BorderColor #B58900
+}
+
+actor "Cliente" as cliente
+actor "Prestador" as prestador
+
+rectangle "FestaLink\n(sistema)" as sys
+
+cliente --> sys : cadastro, busca de salões,\npedido de reserva
+sys --> cliente : catálogo de salões,\nstatus da reserva
+
+prestador --> sys : cadastro de salões,\naprovação ou recusa
+sys --> prestador : alerta de\nnovo pedido
+
+note right of sys
+  Tudo dentro da caixa é parte do
+  sistema FestaLink: apps cliente
+  e prestador, backend, banco e
+  canal de eventos.
+  Os usuários estão fora da fronteira.
+  O salão físico também está fora,
+  pois é o objeto do negócio e não
+  parte do software.
+end note
+
+note bottom of cliente
+  Pessoa que procura um salão
+  para um evento próprio.
+end note
+
+note bottom of prestador
+  Dono ou responsável por um
+  ou mais salões.
+end note
+
+@enduml
