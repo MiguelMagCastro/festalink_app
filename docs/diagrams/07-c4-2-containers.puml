@@ -1,0 +1,63 @@
+@startuml
+title FestaLink — C4-2 Containers
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundCorner 10
+skinparam defaultFontName "Helvetica"
+skinparam rectangle {
+  BackgroundColor #F5F7FB
+  BorderColor #4B5563
+  FontColor #111827
+}
+skinparam database {
+  BackgroundColor #F5F7FB
+  BorderColor #4B5563
+  FontColor #111827
+}
+skinparam cloud {
+  BackgroundColor #FFFFFF
+  BorderColor #9CA3AF
+  FontColor #374151
+}
+skinparam package {
+  BackgroundColor #FAFBFD
+  BorderColor #9CA3AF
+  FontColor #374151
+}
+skinparam note {
+  BackgroundColor #FFF7E6
+  BorderColor #B58900
+}
+
+actor "Cliente" as cli
+actor "Prestador" as pres
+
+package "FestaLink (sistema)" {
+  rectangle "App Cliente\n[Container: Flutter]\nMobile Android" as appCli
+  rectangle "App Prestador\n[Container: Flutter]\nMobile Android" as appPres
+  rectangle "Backend API\n[Container: Node.js + Express]\nREST + WebSocket\n(mesmo processo)" as api
+  database "SQLite\n[Container: arquivo local]\nUsuários, salões, horários,\nbloqueios, reservas, avaliações" as db
+}
+
+cloud "Upstash Redis\n[Sistema externo]\nMOM (Pub/Sub)" as redis
+
+cli --> appCli : usa
+pres --> appPres : usa
+
+appCli --> api : HTTPS / REST\n(JSON, JWT)
+appPres --> api : HTTPS / REST\n(JSON, JWT)
+appPres <--> api : WebSocket\n(conexão persistente\npara eventos)
+
+api --> db : SQL\n(lib SQLite no Node)
+api --> redis : publica e consome\neventos de reserva\n(Redis protocol)
+
+note as N1
+  O backend expõe REST e WebSocket no mesmo
+  processo Node. Atua como produtor (publica
+  eventos ao mudar status de reserva) e como
+  consumidor (escuta o canal e empurra para os
+  WebSockets dos prestadores conectados).
+end note
+
+@enduml
