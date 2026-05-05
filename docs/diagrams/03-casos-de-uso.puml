@@ -1,0 +1,133 @@
+@startuml
+title FestaLink — Casos de Uso
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundCorner 10
+skinparam defaultFontName "Helvetica"
+skinparam usecase {
+  BackgroundColor #F5F7FB
+  BorderColor #4B5563
+  FontColor #111827
+}
+skinparam actor {
+  BackgroundColor #FFFFFF
+  BorderColor #4B5563
+}
+skinparam package {
+  BackgroundColor #FAFBFD
+  BorderColor #9CA3AF
+  FontColor #374151
+}
+skinparam note {
+  BackgroundColor #FFF7E6
+  BorderColor #B58900
+}
+
+left to right direction
+
+actor "Cliente" as cli
+actor "Prestador" as pres
+
+rectangle "FestaLink" {
+
+  package "Conta" {
+    usecase "Criar conta" as UC_conta
+    usecase "Fazer login" as UC_login
+  }
+
+  package "Cliente — Reservas e avaliações" {
+    usecase "Buscar salões" as UC_buscar
+    usecase "Ver detalhes\ndo salão" as UC_detalhe
+    usecase "Solicitar reserva" as UC_solicitar
+    usecase "Acompanhar\nminhas reservas" as UC_acomp
+    usecase "Cancelar reserva" as UC_cancelar
+    usecase "Avaliar salão" as UC_avaliar
+    usecase "Listar minhas\navaliações" as UC_minhasAval
+    usecase "Editar avaliação" as UC_editAval
+    usecase "Excluir avaliação" as UC_excAval
+  }
+
+  package "Prestador — Salões e disponibilidade" {
+    usecase "Cadastrar salão" as UC_cadSalao
+    usecase "Listar meus salões" as UC_meusSaloes
+    usecase "Editar salão" as UC_editarSalao
+    usecase "Excluir salão" as UC_excluirSalao
+    usecase "Definir horários\nde funcionamento" as UC_horarios
+    usecase "Bloquear data" as UC_bloquear
+    usecase "Listar bloqueios" as UC_listBloq
+    usecase "Remover bloqueio" as UC_remBloq
+  }
+
+  package "Prestador — Pedidos e avaliações" {
+    usecase "Listar pedidos\npendentes" as UC_listarPed
+    usecase "Aprovar reserva" as UC_aprovar
+    usecase "Recusar reserva" as UC_recusar
+    usecase "Listar avaliações\nrecebidas" as UC_listAvalRec
+    usecase "Responder avaliação" as UC_responder
+    usecase "Editar resposta" as UC_editResp
+    usecase "Excluir resposta" as UC_excResp
+  }
+
+}
+
+cli --> UC_conta
+cli --> UC_login
+cli --> UC_buscar
+cli --> UC_detalhe
+cli --> UC_solicitar
+cli --> UC_acomp
+cli --> UC_cancelar
+cli --> UC_avaliar
+cli --> UC_minhasAval
+cli --> UC_editAval
+cli --> UC_excAval
+
+pres --> UC_conta
+pres --> UC_login
+pres --> UC_cadSalao
+pres --> UC_meusSaloes
+pres --> UC_editarSalao
+pres --> UC_excluirSalao
+pres --> UC_horarios
+pres --> UC_bloquear
+pres --> UC_listBloq
+pres --> UC_remBloq
+pres --> UC_listarPed
+pres --> UC_aprovar
+pres --> UC_recusar
+pres --> UC_listAvalRec
+pres --> UC_responder
+pres --> UC_editResp
+pres --> UC_excResp
+
+UC_cancelar ..> UC_acomp : <<extend>>
+UC_avaliar ..> UC_acomp : <<extend>>
+UC_editAval ..> UC_minhasAval : <<extend>>
+UC_excAval ..> UC_minhasAval : <<extend>>
+UC_aprovar ..> UC_listarPed : <<extend>>
+UC_recusar ..> UC_listarPed : <<extend>>
+UC_remBloq ..> UC_listBloq : <<extend>>
+UC_responder ..> UC_listAvalRec : <<extend>>
+UC_editResp ..> UC_listAvalRec : <<extend>>
+UC_excResp ..> UC_listAvalRec : <<extend>>
+
+note as N1
+  Casos exceto "Criar conta" e "Fazer
+  login" exigem usuário autenticado
+  via JWT.
+
+  Avaliar salão só após reserva
+  aprovada com data do evento
+  já passada.
+
+  Cliente pode editar ou excluir a
+  avaliação enquanto o prestador
+  não respondeu.
+
+  Prestador pode editar ou excluir
+  a resposta apenas nas primeiras
+  24 horas após postada.
+end note
+
+@enduml
