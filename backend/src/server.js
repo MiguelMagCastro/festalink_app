@@ -1,5 +1,8 @@
 require('dotenv').config();
 const express = require('express');
+const { openDatabase } = require('./db/init');
+
+openDatabase();
 
 const app = express();
 app.use(express.json());
