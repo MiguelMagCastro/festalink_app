@@ -22,7 +22,10 @@ class ExcluirResposta {
     }
 
     const salao = this.salaoRepository.buscarPorId(reserva.salaoId);
-    if (!salao || salao.prestadorId !== prestadorId) {
+    if (!salao) {
+      throw new RecursoNaoEncontradoError('salão dessa avaliação não está mais disponível');
+    }
+    if (salao.prestadorId !== prestadorId) {
       throw new AcessoNegadoError('avaliação não pertence a um salão seu');
     }
 

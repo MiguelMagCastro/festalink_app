@@ -5,9 +5,10 @@ const {
 } = require('../../domain/errors/DomainError');
 
 class ExcluirAvaliacao {
-  constructor({ reservaRepository, avaliacaoRepository }) {
+  constructor({ reservaRepository, avaliacaoRepository, salaoRepository }) {
     this.reservaRepository = reservaRepository;
     this.avaliacaoRepository = avaliacaoRepository;
+    this.salaoRepository = salaoRepository;
   }
 
   executar({ reservaId, clienteId }) {
@@ -17,6 +18,10 @@ class ExcluirAvaliacao {
     }
     if (reserva.clienteId !== clienteId) {
       throw new AcessoNegadoError('reserva não pertence a você');
+    }
+    const salao = this.salaoRepository.buscarPorId(reserva.salaoId);
+    if (!salao) {
+      throw new RecursoNaoEncontradoError('salão dessa reserva não está mais disponível');
     }
 
     const avaliacao = this.avaliacaoRepository.buscarPorReservaId(reservaId);

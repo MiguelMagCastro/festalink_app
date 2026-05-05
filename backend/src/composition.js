@@ -92,9 +92,9 @@ function compor() {
   const recusarReserva = new RecusarReserva({ reservaRepository, salaoRepository });
   const cancelarReserva = new CancelarReserva({ reservaRepository, salaoRepository });
 
-  const postarAvaliacao = new PostarAvaliacao({ reservaRepository, avaliacaoRepository });
-  const editarAvaliacao = new EditarAvaliacao({ reservaRepository, avaliacaoRepository });
-  const excluirAvaliacao = new ExcluirAvaliacao({ reservaRepository, avaliacaoRepository });
+  const postarAvaliacao = new PostarAvaliacao({ reservaRepository, avaliacaoRepository, salaoRepository });
+  const editarAvaliacao = new EditarAvaliacao({ reservaRepository, avaliacaoRepository, salaoRepository });
+  const excluirAvaliacao = new ExcluirAvaliacao({ reservaRepository, avaliacaoRepository, salaoRepository });
   const listarAvaliacoesDoSalao = new ListarAvaliacoesDoSalao({ salaoRepository, avaliacaoRepository });
   const responderAvaliacao = new ResponderAvaliacao({ avaliacaoRepository, reservaRepository, salaoRepository });
   const editarResposta = new EditarResposta({ avaliacaoRepository, reservaRepository, salaoRepository });

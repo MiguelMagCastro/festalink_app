@@ -23,7 +23,10 @@ class CancelarReserva {
       reserva.cancelarPeloCliente();
     } else if (papel === 'prestador') {
       const salao = this.salaoRepository.buscarPorId(reserva.salaoId);
-      if (!salao || salao.prestadorId !== usuarioId) {
+      if (!salao) {
+        throw new RecursoNaoEncontradoError('salão dessa reserva não está mais disponível');
+      }
+      if (salao.prestadorId !== usuarioId) {
         throw new AcessoNegadoError('reserva não pertence a um salão seu');
       }
       reserva.cancelarPeloPrestador();

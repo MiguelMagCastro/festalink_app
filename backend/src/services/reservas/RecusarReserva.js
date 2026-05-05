@@ -15,7 +15,10 @@ class RecusarReserva {
       throw new RecursoNaoEncontradoError('reserva não encontrada');
     }
     const salao = this.salaoRepository.buscarPorId(reserva.salaoId);
-    if (!salao || salao.prestadorId !== prestadorId) {
+    if (!salao) {
+      throw new RecursoNaoEncontradoError('salão dessa reserva não está mais disponível');
+    }
+    if (salao.prestadorId !== prestadorId) {
       throw new AcessoNegadoError('reserva não pertence a um salão seu');
     }
     reserva.recusar();

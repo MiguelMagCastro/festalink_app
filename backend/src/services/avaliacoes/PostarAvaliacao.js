@@ -6,9 +6,10 @@ const {
 } = require('../../domain/errors/DomainError');
 
 class PostarAvaliacao {
-  constructor({ reservaRepository, avaliacaoRepository }) {
+  constructor({ reservaRepository, avaliacaoRepository, salaoRepository }) {
     this.reservaRepository = reservaRepository;
     this.avaliacaoRepository = avaliacaoRepository;
+    this.salaoRepository = salaoRepository;
   }
 
   executar({ reservaId, clienteId, dados }) {
@@ -18,6 +19,10 @@ class PostarAvaliacao {
     }
     if (reserva.clienteId !== clienteId) {
       throw new AcessoNegadoError('reserva não pertence a você');
+    }
+    const salao = this.salaoRepository.buscarPorId(reserva.salaoId);
+    if (!salao) {
+      throw new RecursoNaoEncontradoError('salão dessa reserva não está mais disponível');
     }
     if (!reserva.podeSerAvaliada()) {
       throw new ConflitoEstadoError('reserva ainda não pode ser avaliada (precisa estar aprovada e a data já ter passado)');
