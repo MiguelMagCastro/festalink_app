@@ -1,0 +1,48 @@
+@startuml
+title FestaLink — C4-1 Contexto Técnico
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundCorner 10
+skinparam defaultFontName "Helvetica"
+skinparam rectangle {
+  BackgroundColor #F5F7FB
+  BorderColor #4B5563
+  FontColor #111827
+}
+skinparam cloud {
+  BackgroundColor #FFFFFF
+  BorderColor #9CA3AF
+  FontColor #374151
+}
+skinparam note {
+  BackgroundColor #FFF7E6
+  BorderColor #B58900
+}
+
+actor "Cliente" as cli
+actor "Prestador" as pres
+
+rectangle "FestaLink\n[Sistema]" as sys
+
+cloud "Upstash Redis\n[Sistema externo]\nRedis Pub/Sub gerenciado" as redis
+
+cli --> sys : HTTPS / REST\n(JSON, JWT)
+pres --> sys : HTTPS / REST\n(JSON, JWT)\n+ WebSocket
+sys --> redis : Redis protocol\n(publica e consome\neventos de reserva)
+
+note bottom of sys
+  Composto pelos apps Flutter (cliente
+  e prestador), backend Node.js + Express
+  com SQLite local e canal WebSocket
+  para empurrar eventos ao app prestador.
+  Detalhamento dos containers em C4-2.
+end note
+
+note bottom of redis
+  Único sistema externo do projeto.
+  Atende ao requisito de MOM do enunciado
+  sem exigir Docker nem hospedagem própria.
+end note
+
+@enduml
