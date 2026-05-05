@@ -16,6 +16,7 @@ function salaoParaDTO(salao) {
     aceitaPets: salao.aceitaPets,
     regrasAdicionais: salao.regrasAdicionais,
     criadoEm: salao.criadoEm,
+    deletadoEm: salao.deletadoEm,
   };
 }
 
@@ -122,8 +123,8 @@ class SalaoController {
   excluir(req, res, next) {
     try {
       const id = parseIntParam(req.params.id);
-      this.excluirSalao.executar({ id, prestadorId: req.usuario.id });
-      return res.status(204).send();
+      const salao = this.excluirSalao.executar({ id, prestadorId: req.usuario.id });
+      return res.json(salaoParaDTO(salao));
     } catch (err) {
       return next(err);
     }

@@ -58,6 +58,11 @@ class SalaoRepository {
     return row ? mapearLinha(row) : null;
   }
 
+  buscarPorIdIncluindoArquivado(id) {
+    const row = this.db.prepare(`SELECT * FROM saloes WHERE id = ?`).get(id);
+    return row ? mapearLinha(row) : null;
+  }
+
   listarTodos() {
     const rows = this.db.prepare(`
       SELECT * FROM saloes WHERE deletado_em IS NULL ORDER BY id DESC

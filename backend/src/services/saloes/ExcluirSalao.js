@@ -17,6 +17,7 @@ class ExcluirSalao {
       throw new AcessoNegadoError('salão pertence a outro prestador');
     }
     this.salaoRepository.arquivar(salao.id);
+    return this.salaoRepository.buscarPorIdIncluindoArquivado(salao.id);
   }
 }
 
