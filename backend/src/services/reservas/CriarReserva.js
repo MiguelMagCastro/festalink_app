@@ -12,7 +12,8 @@ function diaDaSemanaUTC(dataIso) {
 }
 
 class CriarReserva {
-  constructor({ salaoRepository, horarioRepository, bloqueioRepository, reservaRepository }) {
+  constructor({ unitOfWork, salaoRepository, horarioRepository, bloqueioRepository, reservaRepository }) {
+    this.unitOfWork = unitOfWork;
     this.salaoRepository = salaoRepository;
     this.horarioRepository = horarioRepository;
     this.bloqueioRepository = bloqueioRepository;
@@ -20,8 +21,12 @@ class CriarReserva {
   }
 
   executar({ clienteId, dados }) {
-    if (!dados.salaoId) {
+    if (!dados.salaoId || !Number.isInteger(Number(dados.salaoId))) {
       throw new DomainError('salaoId obrigatório');
+    }
+    if (!dados.dataEvento || typeof dados.dataEvento !== 'string'
+        || !/^\d{4}-\d{2}-\d{2}$/.test(dados.dataEvento)) {
+      throw new DomainError('dataEvento deve estar no formato YYYY-MM-DD');
     }
 
     const salao = this.salaoRepository.buscarPorId(dados.salaoId);
@@ -48,22 +53,24 @@ class CriarReserva {
       }
     }
 
-    const ativas = this.reservaRepository.listarAtivasNaData(salao.id, dados.dataEvento);
-    for (const r of ativas) {
-      if (r.periodo().intersectaCom(periodo)) {
-        throw new ConflitoEstadoError('já existe uma reserva ativa que conflita com esse horário');
+    return this.unitOfWork.run(() => {
+      const ativas = this.reservaRepository.listarAtivasNaData(salao.id, dados.dataEvento);
+      for (const r of ativas) {
+        if (r.periodo().intersectaCom(periodo)) {
+          throw new ConflitoEstadoError('já existe uma reserva ativa que conflita com esse horário');
+        }
       }
-    }
 
-    const reserva = new Reserva({
-      clienteId,
-      salaoId: salao.id,
-      dataEvento: dados.dataEvento,
-      horaInicio: dados.horaInicio,
-      horaFim: dados.horaFim,
+      const reserva = new Reserva({
+        clienteId,
+        salaoId: salao.id,
+        dataEvento: dados.dataEvento,
+        horaInicio: dados.horaInicio,
+        horaFim: dados.horaFim,
+      });
+
+      return this.reservaRepository.criar(reserva);
     });
-
-    return this.reservaRepository.criar(reserva);
   }
 }
 

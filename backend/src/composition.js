@@ -9,6 +9,7 @@ const { AvaliacaoRepository } = require('./repositories/AvaliacaoRepository');
 
 const { HashService } = require('./infra/HashService');
 const { TokenService } = require('./infra/TokenService');
+const { UnitOfWork } = require('./infra/UnitOfWork');
 
 const { RegistrarUsuario } = require('./services/auth/RegistrarUsuario');
 const { Login } = require('./services/auth/Login');
@@ -61,6 +62,7 @@ function compor() {
     secret: process.env.JWT_SECRET,
     expiresIn: process.env.JWT_EXPIRES_IN,
   });
+  const unitOfWork = new UnitOfWork(db);
 
   const registrarUsuario = new RegistrarUsuario({ usuarioRepository, hashService });
   const login = new Login({ usuarioRepository, hashService, tokenService });
@@ -78,6 +80,7 @@ function compor() {
   const removerBloqueio = new RemoverBloqueio({ salaoRepository, bloqueioRepository });
 
   const criarReserva = new CriarReserva({
+    unitOfWork,
     salaoRepository,
     horarioRepository,
     bloqueioRepository,
@@ -135,7 +138,7 @@ function compor() {
       usuarioRepository, salaoRepository, horarioRepository,
       bloqueioRepository, reservaRepository, avaliacaoRepository,
     },
-    services: { hashService, tokenService },
+    services: { hashService, tokenService, unitOfWork },
     useCases: {
       registrarUsuario, login, obterMeuPerfil,
       criarSalao, listarSaloes, listarMeusSaloes, obterSalao,
