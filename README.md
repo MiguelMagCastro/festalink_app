@@ -34,11 +34,65 @@ Sprint 1 em andamento (entrega 11/05/2026):
 
 - [x] Proposta de domínio
 - [x] Diagramas (13)
-- [ ] Backend REST
+- [x] Backend REST
 - [ ] Coleção Postman
 
-## Como rodar
+## Como rodar o backend
 
-O backend está em desenvolvimento. As instruções de execução serão adicionadas aqui assim que estiver navegável.
+Pré-requisitos: Node.js 20 ou superior e npm.
 
-Para renderizar os diagramas localmente, é preciso ter o Java instalado e o `plantuml.jar` disponível. Os PNGs já versionados ficam em `docs/diagrams/rendered/`.
+Entra na pasta do backend e instala as dependências:
+
+```bash
+cd backend
+npm install
+```
+
+Configura o arquivo `.env` a partir do exemplo. O `JWT_SECRET` precisa ser uma string longa e aleatória — não use o valor que vem no `.env.example`:
+
+```bash
+cp .env.example .env
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+Cole o resultado do comando acima como valor de `JWT_SECRET` no `.env`.
+
+Sobe o servidor em modo desenvolvimento (com restart automático via nodemon):
+
+```bash
+npm run dev
+```
+
+Ou em modo produção:
+
+```bash
+npm start
+```
+
+A API fica disponível em `http://localhost:3000`. Pra confirmar que subiu:
+
+```bash
+curl http://localhost:3000/health
+```
+
+A resposta esperada é `{"status":"ok","service":"festalink-backend"}`.
+
+### Banco de dados
+
+O SQLite é criado automaticamente no primeiro boot, em `backend/festalink.db` (caminho configurável via `DB_PATH` no `.env`). Pra zerar o banco e começar do zero, basta parar o servidor e apagar o arquivo:
+
+```bash
+rm backend/festalink.db backend/festalink.db-wal backend/festalink.db-shm
+```
+
+### Endpoints
+
+A API expõe 24 endpoints divididos em quatro grupos: autenticação, salões (com horários e bloqueios), reservas e avaliações. A coleção Postman completa estará em `postman/festalink.postman_collection.json`.
+
+## Como renderizar os diagramas
+
+É preciso ter o Java instalado e o `plantuml.jar` disponível. Os PNGs já versionados ficam em `docs/diagrams/rendered/`. Pra renderizar manualmente:
+
+```bash
+java -jar plantuml.jar -tpng -o rendered docs/diagrams/*.puml
+```
