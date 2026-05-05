@@ -3,6 +3,7 @@ const express = require('express');
 const { openDatabase } = require('./db/init');
 const { compor } = require('./composition');
 const { criarAuthRoutes } = require('./routes/auth.routes');
+const { criarSaloesRoutes } = require('./routes/saloes.routes');
 const { errorHandler } = require('./middleware/errorHandler');
 
 openDatabase();
@@ -18,6 +19,12 @@ app.get('/health', (req, res) => {
 app.use('/auth', criarAuthRoutes({
   authController: ctx.controllers.authController,
   autenticar: ctx.middlewares.autenticar,
+}));
+
+app.use('/saloes', criarSaloesRoutes({
+  salaoController: ctx.controllers.salaoController,
+  autenticar: ctx.middlewares.autenticar,
+  exigirPapel: ctx.middlewares.exigirPapel,
 }));
 
 app.use(errorHandler);
