@@ -1,0 +1,91 @@
+@startuml
+title FestaLink — Modelo Conceitual de Dados
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundCorner 10
+skinparam defaultFontName "Helvetica"
+skinparam entity {
+  BackgroundColor #F5F7FB
+  BorderColor #4B5563
+  FontColor #111827
+}
+skinparam note {
+  BackgroundColor #FFF7E6
+  BorderColor #B58900
+}
+
+entity "Usuario" as usuario {
+  nome
+  email
+  senha
+  papel (cliente | prestador)
+}
+
+entity "Salao" as salao {
+  nome
+  descricao
+  endereco
+  capacidade_max
+  valor_diaria
+  area_m2
+  tem_estacionamento
+  tem_cozinha
+  permite_musica_ao_vivo
+  aceita_pets
+  regras_adicionais
+}
+
+entity "HorarioFuncionamento" as horario {
+  dia_semana
+  abre_em
+  fecha_em
+}
+
+entity "BloqueioData" as bloqueio {
+  data
+  hora_inicio
+  hora_fim
+  motivo
+}
+
+entity "Reserva" as reserva {
+  data_evento
+  hora_inicio
+  hora_fim
+  status (pendente | aprovada |
+          recusada | cancelada)
+}
+
+entity "Avaliacao" as avaliacao {
+  nota (1 a 5)
+  comentario
+  resposta_prestador
+  postada_em
+  respondida_em
+}
+
+usuario "1" -- "N" salao : possui (prestador)
+salao "1" -- "N" horario : tem
+salao "1" -- "N" bloqueio : tem
+usuario "1" -- "N" reserva : faz (cliente)
+salao "1" -- "N" reserva : recebe
+reserva "1" -- "0..1" avaliacao : gera
+
+note as N1
+  Modelo conceitual: relacionamentos e
+  cardinalidades fechados, sem chaves
+  físicas, tipos de coluna ou índices.
+  Esses detalhes ficam para o Modelo
+  Lógico.
+
+  Um usuário assume um único papel
+  (cliente ou prestador), definido no
+  cadastro.
+
+  Avaliacao é opcional para uma reserva
+  e só é criada quando reserva.status =
+  aprovada e data_evento já passou.
+end note
+
+@enduml
