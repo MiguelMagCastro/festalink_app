@@ -1,0 +1,84 @@
+@startuml
+title FestaLink — Sitemap Mobile
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundCorner 10
+skinparam defaultFontName "Helvetica"
+skinparam rectangle {
+  BackgroundColor #F5F7FB
+  BorderColor #4B5563
+  FontColor #111827
+}
+skinparam package {
+  BackgroundColor #FAFBFD
+  BorderColor #9CA3AF
+  FontColor #374151
+}
+skinparam note {
+  BackgroundColor #FFF7E6
+  BorderColor #B58900
+}
+
+rectangle "Splash" as splash
+rectangle "Login" as login
+rectangle "Cadastro" as cadastro
+
+splash --> login
+login --> cadastro
+cadastro --> login
+
+package "App Cliente" {
+  rectangle "Buscar salões\n(tab)" as cli_buscar
+  rectangle "Minhas reservas\n(tab)" as cli_reservas
+  rectangle "Minhas avaliações\n(tab)" as cli_aval
+  rectangle "Perfil\n(tab)" as cli_perfil
+
+  rectangle "Detalhe do salão" as cli_detSalao
+  rectangle "Solicitar reserva" as cli_solicitar
+  rectangle "Detalhe da reserva" as cli_detRes
+  rectangle "Avaliar salão" as cli_avaliar
+  rectangle "Editar avaliação" as cli_editAval
+
+  cli_buscar --> cli_detSalao
+  cli_detSalao --> cli_solicitar
+  cli_reservas --> cli_detRes
+  cli_detRes --> cli_avaliar : se concluída
+  cli_aval --> cli_editAval : se sem resposta
+}
+
+package "App Prestador" {
+  rectangle "Pedidos pendentes\n(tab)" as pres_pedidos
+  rectangle "Meus salões\n(tab)" as pres_saloes
+  rectangle "Avaliações recebidas\n(tab)" as pres_aval
+  rectangle "Perfil\n(tab)" as pres_perfil
+
+  rectangle "Detalhe do pedido" as pres_detPed
+  rectangle "Cadastrar salão" as pres_cadSalao
+  rectangle "Detalhe / Editar salão" as pres_detSalao
+  rectangle "Horários de funcionamento" as pres_horarios
+  rectangle "Bloqueios" as pres_bloqueios
+  rectangle "Cadastrar bloqueio" as pres_cadBloq
+  rectangle "Responder avaliação" as pres_responder
+
+  pres_pedidos --> pres_detPed
+  pres_saloes --> pres_cadSalao
+  pres_saloes --> pres_detSalao
+  pres_detSalao --> pres_horarios
+  pres_detSalao --> pres_bloqueios
+  pres_bloqueios --> pres_cadBloq
+  pres_aval --> pres_responder
+}
+
+login --> cli_buscar : perfil cliente
+login --> pres_pedidos : perfil prestador
+
+note as N1
+  As tabs são acessíveis a qualquer
+  momento via barra inferior do app.
+  As telas de Perfil permitem editar
+  dados do usuário e fazer logout
+  nos dois apps.
+end note
+
+@enduml
