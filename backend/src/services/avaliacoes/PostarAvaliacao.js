@@ -1,0 +1,39 @@
+const { Avaliacao } = require('../../domain/entities/Avaliacao');
+const {
+  RecursoNaoEncontradoError,
+  AcessoNegadoError,
+  ConflitoEstadoError,
+} = require('../../domain/errors/DomainError');
+
+class PostarAvaliacao {
+  constructor({ reservaRepository, avaliacaoRepository }) {
+    this.reservaRepository = reservaRepository;
+    this.avaliacaoRepository = avaliacaoRepository;
+  }
+
+  executar({ reservaId, clienteId, dados }) {
+    const reserva = this.reservaRepository.buscarPorId(reservaId);
+    if (!reserva) {
+      throw new RecursoNaoEncontradoError('reserva não encontrada');
+    }
+    if (reserva.clienteId !== clienteId) {
+      throw new AcessoNegadoError('reserva não pertence a você');
+    }
+    if (!reserva.podeSerAvaliada()) {
+      throw new ConflitoEstadoError('reserva ainda não pode ser avaliada (precisa estar aprovada e a data já ter passado)');
+    }
+    const existente = this.avaliacaoRepository.buscarPorReservaId(reservaId);
+    if (existente) {
+      throw new ConflitoEstadoError('reserva já tem avaliação postada');
+    }
+
+    const avaliacao = new Avaliacao({
+      reservaId,
+      nota: dados.nota,
+      comentario: dados.comentario ?? null,
+    });
+    return this.avaliacaoRepository.criar(avaliacao);
+  }
+}
+
+module.exports = { PostarAvaliacao };

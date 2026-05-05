@@ -5,6 +5,7 @@ const { SalaoRepository } = require('./repositories/SalaoRepository');
 const { HorarioFuncionamentoRepository } = require('./repositories/HorarioFuncionamentoRepository');
 const { BloqueioDataRepository } = require('./repositories/BloqueioDataRepository');
 const { ReservaRepository } = require('./repositories/ReservaRepository');
+const { AvaliacaoRepository } = require('./repositories/AvaliacaoRepository');
 
 const { HashService } = require('./infra/HashService');
 const { TokenService } = require('./infra/TokenService');
@@ -31,9 +32,18 @@ const { AprovarReserva } = require('./services/reservas/AprovarReserva');
 const { RecusarReserva } = require('./services/reservas/RecusarReserva');
 const { CancelarReserva } = require('./services/reservas/CancelarReserva');
 
+const { PostarAvaliacao } = require('./services/avaliacoes/PostarAvaliacao');
+const { EditarAvaliacao } = require('./services/avaliacoes/EditarAvaliacao');
+const { ExcluirAvaliacao } = require('./services/avaliacoes/ExcluirAvaliacao');
+const { ListarAvaliacoesDoSalao } = require('./services/avaliacoes/ListarAvaliacoesDoSalao');
+const { ResponderAvaliacao } = require('./services/avaliacoes/ResponderAvaliacao');
+const { EditarResposta } = require('./services/avaliacoes/EditarResposta');
+const { ExcluirResposta } = require('./services/avaliacoes/ExcluirResposta');
+
 const { AuthController } = require('./controllers/AuthController');
 const { SalaoController } = require('./controllers/SalaoController');
 const { ReservaController } = require('./controllers/ReservaController');
+const { AvaliacaoController } = require('./controllers/AvaliacaoController');
 const { criarAutenticar, exigirPapel } = require('./middleware/authMiddleware');
 
 function compor() {
@@ -44,6 +54,7 @@ function compor() {
   const horarioRepository = new HorarioFuncionamentoRepository(db);
   const bloqueioRepository = new BloqueioDataRepository(db);
   const reservaRepository = new ReservaRepository(db);
+  const avaliacaoRepository = new AvaliacaoRepository(db);
 
   const hashService = new HashService();
   const tokenService = new TokenService({
@@ -78,6 +89,14 @@ function compor() {
   const recusarReserva = new RecusarReserva({ reservaRepository, salaoRepository });
   const cancelarReserva = new CancelarReserva({ reservaRepository, salaoRepository });
 
+  const postarAvaliacao = new PostarAvaliacao({ reservaRepository, avaliacaoRepository });
+  const editarAvaliacao = new EditarAvaliacao({ reservaRepository, avaliacaoRepository });
+  const excluirAvaliacao = new ExcluirAvaliacao({ reservaRepository, avaliacaoRepository });
+  const listarAvaliacoesDoSalao = new ListarAvaliacoesDoSalao({ salaoRepository, avaliacaoRepository });
+  const responderAvaliacao = new ResponderAvaliacao({ avaliacaoRepository, reservaRepository, salaoRepository });
+  const editarResposta = new EditarResposta({ avaliacaoRepository, reservaRepository, salaoRepository });
+  const excluirResposta = new ExcluirResposta({ avaliacaoRepository, reservaRepository, salaoRepository });
+
   const authController = new AuthController({ registrarUsuario, login, obterMeuPerfil });
   const salaoController = new SalaoController({
     criarSalao,
@@ -99,13 +118,22 @@ function compor() {
     recusarReserva,
     cancelarReserva,
   });
+  const avaliacaoController = new AvaliacaoController({
+    postarAvaliacao,
+    editarAvaliacao,
+    excluirAvaliacao,
+    listarAvaliacoesDoSalao,
+    responderAvaliacao,
+    editarResposta,
+    excluirResposta,
+  });
 
   const autenticar = criarAutenticar({ tokenService });
 
   return {
     repositories: {
       usuarioRepository, salaoRepository, horarioRepository,
-      bloqueioRepository, reservaRepository,
+      bloqueioRepository, reservaRepository, avaliacaoRepository,
     },
     services: { hashService, tokenService },
     useCases: {
@@ -115,8 +143,11 @@ function compor() {
       criarBloqueio, listarBloqueios, removerBloqueio,
       criarReserva, listarMinhasReservas, listarReservasRecebidas,
       aprovarReserva, recusarReserva, cancelarReserva,
+      postarAvaliacao, editarAvaliacao, excluirAvaliacao,
+      listarAvaliacoesDoSalao, responderAvaliacao,
+      editarResposta, excluirResposta,
     },
-    controllers: { authController, salaoController, reservaController },
+    controllers: { authController, salaoController, reservaController, avaliacaoController },
     middlewares: { autenticar, exigirPapel },
   };
 }
