@@ -63,7 +63,9 @@ class ReservaRepository {
       SELECT r.*
       FROM reservas r
       JOIN saloes s ON s.id = r.salao_id
-      WHERE s.prestador_id = ? AND r.deletado_em IS NULL
+      WHERE s.prestador_id = ?
+        AND s.deletado_em IS NULL
+        AND r.deletado_em IS NULL
       ORDER BY r.data_evento DESC, r.id DESC
     `).all(prestadorId);
     return rows.map(mapearLinha);
