@@ -1,0 +1,154 @@
+@startuml
+title FestaLink — Diagrama de Domínio
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundCorner 10
+skinparam defaultFontName "Helvetica"
+skinparam class {
+  BackgroundColor #F5F7FB
+  BorderColor #4B5563
+  FontColor #111827
+}
+skinparam enum {
+  BackgroundColor #FFF7E6
+  BorderColor #B58900
+}
+skinparam note {
+  BackgroundColor #FFF7E6
+  BorderColor #B58900
+}
+
+enum PapelUsuario {
+  CLIENTE
+  PRESTADOR
+}
+
+enum StatusReserva {
+  PENDENTE
+  APROVADA
+  RECUSADA
+  CANCELADA
+}
+
+class Usuario {
+  - id : int
+  - nome : string
+  - email : string
+  - senhaHash : string
+  - papel : PapelUsuario
+  --
+  + ehCliente() : bool
+  + ehPrestador() : bool
+  + autenticar(senha) : bool
+  + mudarSenha(nova)
+}
+
+class Salao {
+  - id : int
+  - nome : string
+  - descricao : string
+  - endereco : string
+  - capacidadeMax : int
+  - valorDiaria : decimal
+  - areaM2 : int
+  - temEstacionamento : bool
+  - temCozinha : bool
+  - permiteMusicaAoVivo : bool
+  - aceitaPets : bool
+  - regrasAdicionais : string
+  --
+  + pertenceA(prestador : Usuario) : bool
+  + estaAbertoEm(data : Date, periodo : Periodo) : bool
+  + atualizarRegras(...)
+  + arquivar()
+}
+
+class HorarioFuncionamento {
+  - diaSemana : int
+  - abreEm : Time
+  - fechaEm : Time
+  --
+  + cobre(periodo : Periodo) : bool
+}
+
+class BloqueioData {
+  - data : Date
+  - horaInicio : Time
+  - horaFim : Time
+  - motivo : string
+  --
+  + conflitaCom(data : Date, periodo : Periodo) : bool
+}
+
+class Reserva {
+  - id : int
+  - dataEvento : Date
+  - horaInicio : Time
+  - horaFim : Time
+  - status : StatusReserva
+  - criadaEm : DateTime
+  - atualizadaEm : DateTime
+  --
+  + aprovar()
+  + recusar()
+  + cancelarPeloCliente()
+  + cancelarPeloPrestador()
+  + estaConcluida() : bool
+  + podeSerAvaliada() : bool
+}
+
+class Avaliacao {
+  - id : int
+  - nota : int
+  - comentario : string
+  - postadaEm : DateTime
+  - respostaPrestador : string
+  - respondidaEm : DateTime
+  --
+  + foiRespondida() : bool
+  + clientePodeEditar() : bool
+  + prestadorPodeEditarResposta() : bool
+  + responder(texto)
+  + editarPeloCliente(novaNota, novoComentario)
+  + excluirPeloCliente()
+  + editarResposta(novoTexto)
+  + excluirResposta()
+}
+
+class Periodo <<value object>> {
+  - inicio : Time
+  - fim : Time
+  --
+  + duracaoMinutos() : int
+  + intersectaCom(outro : Periodo) : bool
+}
+
+Usuario "1" -- "N" Salao : possui (prestador)
+Usuario "1" -- "N" Reserva : faz (cliente)
+Salao "1" *-- "N" HorarioFuncionamento
+Salao "1" *-- "N" BloqueioData
+Salao "1" o-- "N" Reserva : recebe
+Reserva "1" *-- "0..1" Avaliacao
+
+note as N1
+  Regras de negócio dentro das entidades,
+  não nos services:
+
+  Reserva.aprovar e recusar só atuam quando
+  status é PENDENTE. Cancelar tem regras
+  diferentes para cliente e prestador.
+
+  Avaliacao.clientePodeEditar retorna true
+  só enquanto a resposta ainda não existe.
+  prestadorPodeEditarResposta retorna true
+  só enquanto respondidaEm + 24h não passou.
+
+  Salao.estaAbertoEm combina o horário
+  padrão da semana (HorarioFuncionamento)
+  com as exceções pontuais (BloqueioData).
+  Um bloqueio que conflita com o período
+  solicitado sobrescreve o horário padrão.
+end note
+
+@enduml
