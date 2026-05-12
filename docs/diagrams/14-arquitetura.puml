@@ -1,0 +1,117 @@
+@startuml
+title FestaLink — Arquitetura Consolidada
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundCorner 10
+skinparam defaultFontName "Helvetica"
+skinparam rectangle {
+  BackgroundColor #F5F7FB
+  BorderColor #4B5563
+  FontColor #111827
+}
+skinparam database {
+  BackgroundColor #F5F7FB
+  BorderColor #4B5563
+  FontColor #111827
+}
+skinparam cloud {
+  BackgroundColor #FFFFFF
+  BorderColor #9CA3AF
+  FontColor #374151
+}
+skinparam package {
+  BackgroundColor #FAFBFD
+  BorderColor #9CA3AF
+  FontColor #374151
+}
+skinparam note {
+  BackgroundColor #FFF7E6
+  BorderColor #B58900
+}
+
+actor "Cliente" as cli
+actor "Prestador" as pres
+
+package "Mobile (Flutter)" as mob {
+  rectangle "App Cliente\n[Flutter / Android]\nbusca de salões,\nsolicita reservas,\npolling de status" as appCli
+  rectangle "App Prestador\n[Flutter / Android]\naprova/recusa pedidos,\nresponde avaliações,\nrecebe push via WS" as appPres
+}
+
+package "Backend (Node.js + Express — processo único)" as backend {
+
+  package "L1 — Frameworks & Drivers" as L1 {
+    rectangle "Express Routes\n+ JWT middleware" as routes
+    rectangle "WebSocket Server\n(lib ws)" as wssetup
+    rectangle "ioredis client\n(→ Upstash)" as redisc
+    rectangle "better-sqlite3\n(driver)" as dbinit
+  }
+
+  package "L2 — Adapters" as L2 {
+    rectangle "HTTP Controllers" as ctrl
+    rectangle "Repositórios SQL" as repo
+    rectangle "Event Publisher" as pub
+    rectangle "Event Consumer" as cons
+    rectangle "WS Notifier" as wsn
+  }
+
+  package "L3 — Use Cases / Application" as L3 {
+    rectangle "Use Cases\nConta · Salão · Disponibilidade\nReserva · Avaliação" as uc
+    rectangle "Ports (interfaces)\nIUsuarioRepo · ISalaoRepo\nIReservaRepo · IAvaliacaoRepo\nIEventPublisher · IPrestadorNotifier" as ports
+  }
+
+  package "L4 — Domínio" as L4 {
+    rectangle "Entidades\nUsuario · Salao\nHorarioFuncionamento · BloqueioData\nReserva · Avaliacao" as ent
+    rectangle "Eventos de Domínio\nReservaSolicitada\nReservaAprovada\nReservaRecusada" as evs
+  }
+}
+
+database "SQLite\n[arquivo local]\nusuários, salões, horários,\nbloqueios, reservas, avaliações" as db
+
+cloud "Upstash Redis\n[Sistema externo]\nMOM (Pub/Sub)" as redis
+
+cli --> appCli : usa
+pres --> appPres : usa
+
+appCli --> routes : HTTPS / REST\n(JSON, JWT)\n+ polling de status
+appPres --> routes : HTTPS / REST\n(JSON, JWT)
+appPres <--> wssetup : WebSocket\n(conexão persistente)
+
+routes --> ctrl
+wssetup --> wsn
+redisc --> pub
+redisc --> cons
+dbinit --> repo
+
+ctrl --> uc
+cons --> uc : recebe evento\ne chama use case
+
+repo ..|> ports : implementa
+pub ..|> ports : implementa
+wsn ..|> ports : implementa
+
+uc --> ports
+uc --> ent
+uc ..> evs
+evs ..> ent
+
+repo --> db : SQL
+pub --> redis : PUBLISH\nReservaSolicitada/Aprovada/Recusada
+cons <-- redis : SUBSCRIBE\n(mesmos canais)
+
+note right of backend
+  Regra de dependência (Clean Architecture):
+  as setas internas apontam sempre de fora
+  para dentro — L1 → L2 → L3 → L4. O domínio
+  (L4) não importa nada de framework.
+
+  Fluxo event-driven (item 2.2 do enunciado):
+  Use Case muda o status da reserva → publica
+  evento via IEventPublisher → Upstash entrega
+  ao Event Consumer → consumer chama use case
+  que usa IPrestadorNotifier → WS empurra para
+  o app prestador conectado. O app cliente
+  reflete a mudança via polling REST.
+end note
+
+@enduml
