@@ -1,0 +1,47 @@
+@startuml
+title FestaLink — Estados da Reserva
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundCorner 10
+skinparam defaultFontName "Helvetica"
+skinparam state {
+  BackgroundColor #F5F7FB
+  BorderColor #4B5563
+  FontColor #111827
+  AttributeFontColor #374151
+  StartColor #111827
+  EndColor #111827
+}
+
+[*] --> pendente : POST /reservas\n(cliente)\n//emite ReservaSolicitada//
+
+pendente --> aprovada : PATCH /reservas/:id/aprovar\n(prestador)\n//emite ReservaAprovada//
+pendente --> recusada : PATCH /reservas/:id/recusar\n(prestador)\n//emite ReservaRecusada//
+pendente --> cancelada : PATCH /reservas/:id/cancelar\n(cliente ou prestador, ate 48h antes)
+
+aprovada --> cancelada : PATCH /reservas/:id/cancelar\n(cliente ou prestador, ate 48h antes)
+
+recusada --> [*]
+cancelada --> [*]
+aprovada --> [*] : evento ocorre
+
+note right of pendente
+  Estado inicial. Aguarda decisao
+  do prestador. Cliente ainda pode
+  cancelar livremente.
+end note
+
+note right of aprovada
+  Cliente pode avaliar apos a data
+  do evento ter passado. Janela de
+  cancelamento limitada a 48h antes
+  do inicio do evento.
+end note
+
+note right of recusada
+  Estado terminal. Sem avaliacao
+  e sem cancelamento.
+end note
+
+@enduml

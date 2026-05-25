@@ -1,0 +1,62 @@
+@startuml
+title FestaLink — Sequência: criar e aprovar reserva com eventos
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundCorner 8
+skinparam defaultFontName "Helvetica"
+skinparam sequence {
+  ArrowColor #374151
+  LifeLineBorderColor #6B7280
+  LifeLineBackgroundColor #F5F7FB
+  ParticipantBorderColor #4B5563
+  ParticipantBackgroundColor #FAFBFD
+  ParticipantFontColor #111827
+  ActorBorderColor #4B5563
+  ActorBackgroundColor #FAFBFD
+}
+
+actor "Cliente\n(app cliente)" as Cli
+participant "API REST\n(Express)" as API
+participant "Use Case\nCriarReserva" as UCC
+database "SQLite" as DB
+participant "RedisEventPublisher" as Pub
+queue "Canal Redis\nfestalink:eventos" as Canal
+participant "RedisEventConsumer" as Cons
+participant "WebSocketNotifier" as WS
+actor "Prestador\n(app prestador)" as Prest
+
+== Criar reserva ==
+Cli -> API : POST /reservas\n(JWT cliente)
+API -> UCC : executar(...)
+UCC -> DB : begin tx
+UCC -> DB : checa funcionamento,\nbloqueios e ativas
+UCC -> DB : INSERT reserva (pendente)
+UCC -> DB : commit
+UCC --> API : reserva persistida
+API --> Cli : 201 Created
+UCC ->> Pub : publicar(ReservaSolicitada)
+Pub ->> Canal : PUBLISH
+Canal ->> Cons : on('message')
+Cons -> WS : notificarPrestadorDoSalao
+WS ->> Prest : push ReservaSolicitada
+
+== Aprovar reserva ==
+Prest -> API : PATCH /reservas/:id/aprovar\n(JWT prestador)
+API -> "Use Case\nAprovarReserva" as UCA : executar
+UCA -> DB : UPDATE status=aprovada
+UCA --> API : reserva atualizada
+API --> Prest : 200 OK
+UCA ->> Pub : publicar(ReservaAprovada)
+Pub ->> Canal : PUBLISH
+Canal ->> Cons : on('message')
+Cons -> WS : notificarPrestadorDoSalao
+WS ->> Prest : push ReservaAprovada
+
+note over Pub, Canal
+  A publicação acontece após o commit
+  da transação e roda fora do caminho
+  da resposta HTTP, em microtarefa.
+end note
+
+@enduml

@@ -1,0 +1,54 @@
+@startuml
+title FestaLink — Atividades: prestador respondendo a um pedido
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundCorner 10
+skinparam defaultFontName "Helvetica"
+skinparam activity {
+  BackgroundColor #F5F7FB
+  BorderColor #4B5563
+  FontColor #111827
+  DiamondBackgroundColor #FFF7E6
+  DiamondBorderColor #B58900
+  StartColor #111827
+  EndColor #111827
+  BarColor #4B5563
+}
+
+|App Prestador|
+start
+:Abrir app e autenticar (JWT);
+:Conectar WebSocket\nws://host:3001?token=...;
+:Aguardar eventos do backend;
+
+|Backend|
+:Cliente cria reserva\n(POST /reservas);
+:Persistir reserva pendente;
+:Publicar ReservaSolicitada\nno canal festalink:eventos;
+:Consumer lê o evento;
+:Notifier empurra para o\nprestador dono do salão;
+
+|App Prestador|
+:Receber ReservaSolicitada\nvia WebSocket;
+:Listar pedido pendente na tela;
+if (Avaliar pedido) then (aprovar)
+  :PATCH /reservas/:id/aprovar;
+  |Backend|
+  :Atualizar status para aprovada;
+  :Publicar ReservaAprovada;
+  :Consumer + Notifier disparam push;
+  |App Prestador|
+  :Mover pedido para "em andamento";
+else (recusar)
+  :PATCH /reservas/:id/recusar;
+  |Backend|
+  :Atualizar status para recusada;
+  :Publicar ReservaRecusada;
+  :Consumer + Notifier disparam push;
+  |App Prestador|
+  :Remover pedido da lista pendente;
+endif
+
+stop
+@enduml
