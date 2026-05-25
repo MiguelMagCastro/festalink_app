@@ -10,6 +10,9 @@ const { AvaliacaoRepository } = require('./repositories/AvaliacaoRepository');
 const { HashService } = require('./infra/HashService');
 const { TokenService } = require('./infra/TokenService');
 const { UnitOfWork } = require('./infra/UnitOfWork');
+const { RedisEventPublisher } = require('./infra/RedisEventPublisher');
+const { RedisEventConsumer } = require('./infra/RedisEventConsumer');
+const { WebSocketNotifier } = require('./infra/WebSocketNotifier');
 
 const { RegistrarUsuario } = require('./services/auth/RegistrarUsuario');
 const { Login } = require('./services/auth/Login');
@@ -64,6 +67,33 @@ function compor() {
   });
   const unitOfWork = new UnitOfWork(db);
 
+  const redisUrl = process.env.REDIS_URL;
+  const canalEventos = process.env.EVENTOS_CANAL || 'festalink:eventos';
+  const wsPort = Number(process.env.WS_PORT || 3001);
+
+  const eventPublisher = redisUrl
+    ? new RedisEventPublisher({ url: redisUrl, canal: canalEventos })
+    : null;
+
+  const wsNotifier = new WebSocketNotifier({
+    porta: wsPort,
+    tokenService,
+    salaoRepository,
+  });
+
+  const eventConsumer = redisUrl
+    ? new RedisEventConsumer({
+        url: redisUrl,
+        canal: canalEventos,
+        onEvento: (evento) => {
+          console.log(`[consumer] ${evento.type} salao=${evento.payload?.salaoId} reserva=${evento.payload?.reservaId}`);
+          if (evento.payload?.salaoId) {
+            wsNotifier.notificarPrestadorDoSalao(evento.payload.salaoId, evento);
+          }
+        },
+      })
+    : null;
+
   const registrarUsuario = new RegistrarUsuario({ usuarioRepository, hashService });
   const login = new Login({ usuarioRepository, hashService, tokenService });
   const obterMeuPerfil = new ObterMeuPerfil({ usuarioRepository });
@@ -85,11 +115,12 @@ function compor() {
     horarioRepository,
     bloqueioRepository,
     reservaRepository,
+    eventPublisher,
   });
   const listarMinhasReservas = new ListarMinhasReservas({ reservaRepository });
   const listarReservasRecebidas = new ListarReservasRecebidas({ reservaRepository });
-  const aprovarReserva = new AprovarReserva({ reservaRepository, salaoRepository });
-  const recusarReserva = new RecusarReserva({ reservaRepository, salaoRepository });
+  const aprovarReserva = new AprovarReserva({ reservaRepository, salaoRepository, eventPublisher });
+  const recusarReserva = new RecusarReserva({ reservaRepository, salaoRepository, eventPublisher });
   const cancelarReserva = new CancelarReserva({ reservaRepository, salaoRepository });
 
   const postarAvaliacao = new PostarAvaliacao({ reservaRepository, avaliacaoRepository, salaoRepository });
@@ -139,6 +170,7 @@ function compor() {
       bloqueioRepository, reservaRepository, avaliacaoRepository,
     },
     services: { hashService, tokenService, unitOfWork },
+    infra: { eventPublisher, eventConsumer, wsNotifier },
     useCases: {
       registrarUsuario, login, obterMeuPerfil,
       criarSalao, listarSaloes, listarMeusSaloes, obterSalao,

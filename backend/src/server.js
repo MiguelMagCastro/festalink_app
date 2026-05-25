@@ -43,7 +43,27 @@ app.use(criarAvaliacoesRoutes({
 
 app.use(errorHandler);
 
+ctx.infra.wsNotifier.iniciar();
+
+if (ctx.infra.eventConsumer) {
+  ctx.infra.eventConsumer.iniciar()
+    .then(() => console.log(`consumer redis ouvindo canal ${process.env.EVENTOS_CANAL || 'festalink:eventos'}`))
+    .catch(err => console.error('falha ao iniciar consumer:', err.message));
+} else {
+  console.warn('REDIS_URL não definida: eventos desativados nesta execução');
+}
+
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log(`festalink api on :${port}`);
 });
+
+function encerrar() {
+  ctx.infra.wsNotifier.fechar();
+  if (ctx.infra.eventPublisher) ctx.infra.eventPublisher.fechar().catch(() => {});
+  if (ctx.infra.eventConsumer) ctx.infra.eventConsumer.fechar().catch(() => {});
+  process.exit(0);
+}
+
+process.on('SIGINT', encerrar);
+process.on('SIGTERM', encerrar);
