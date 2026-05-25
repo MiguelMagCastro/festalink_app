@@ -166,4 +166,26 @@ describe('CriarReserva (use case)', () => {
       },
     })).not.toThrow();
   });
+
+  test('publica ReservaSolicitada após criar com sucesso', async () => {
+    const publish = jest.fn().mockResolvedValue();
+    const dataAlvo = dataFutura(7, 5);
+    const reservaCriada = jest.fn(r => Object.assign({}, r, { id: 42 }));
+    const useCase = new CriarReserva({
+      unitOfWork: { run: fn => fn() },
+      salaoRepository: { buscarPorId: () => fakeSalao() },
+      horarioRepository: { listarPorSalao: () => [new HorarioFuncionamento({ salaoId: 1, diaSemana: 5, abreEm: '18:00', fechaEm: '23:59' })] },
+      bloqueioRepository: { listarPorSalaoEData: () => [] },
+      reservaRepository: { listarAtivasNaData: () => [], criar: reservaCriada },
+      eventPublisher: { publicar: publish },
+    });
+    useCase.executar({
+      clienteId: 2,
+      dados: { salaoId: 1, dataEvento: dataAlvo, horaInicio: '19:00', horaFim: '22:00' },
+    });
+    await new Promise(r => setImmediate(r));
+    expect(publish).toHaveBeenCalledTimes(1);
+    expect(publish.mock.calls[0][0].type).toBe('ReservaSolicitada');
+    expect(publish.mock.calls[0][0].payload.reservaId).toBe(42);
+  });
 });
