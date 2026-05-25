@@ -2,11 +2,13 @@ const {
   RecursoNaoEncontradoError,
   AcessoNegadoError,
 } = require('../../domain/errors/DomainError');
+const { reservaAprovada } = require('../../domain/events');
 
 class AprovarReserva {
-  constructor({ reservaRepository, salaoRepository }) {
+  constructor({ reservaRepository, salaoRepository, eventPublisher }) {
     this.reservaRepository = reservaRepository;
     this.salaoRepository = salaoRepository;
+    this.eventPublisher = eventPublisher;
   }
 
   executar({ reservaId, prestadorId }) {
@@ -22,7 +24,15 @@ class AprovarReserva {
       throw new AcessoNegadoError('reserva não pertence a um salão seu');
     }
     reserva.aprovar();
-    return this.reservaRepository.atualizar(reserva);
+    const atualizada = this.reservaRepository.atualizar(reserva);
+
+    if (this.eventPublisher) {
+      Promise.resolve()
+        .then(() => this.eventPublisher.publicar(reservaAprovada(atualizada)))
+        .catch(err => console.error('[eventos] falha ao publicar ReservaAprovada:', err.message));
+    }
+
+    return atualizada;
   }
 }
 

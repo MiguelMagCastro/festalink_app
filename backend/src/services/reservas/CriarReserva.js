@@ -5,6 +5,7 @@ const {
   RecursoNaoEncontradoError,
   ConflitoEstadoError,
 } = require('../../domain/errors/DomainError');
+const { reservaSolicitada } = require('../../domain/events');
 
 function diaDaSemanaUTC(dataIso) {
   const [y, m, d] = dataIso.split('-').map(Number);
@@ -12,12 +13,13 @@ function diaDaSemanaUTC(dataIso) {
 }
 
 class CriarReserva {
-  constructor({ unitOfWork, salaoRepository, horarioRepository, bloqueioRepository, reservaRepository }) {
+  constructor({ unitOfWork, salaoRepository, horarioRepository, bloqueioRepository, reservaRepository, eventPublisher }) {
     this.unitOfWork = unitOfWork;
     this.salaoRepository = salaoRepository;
     this.horarioRepository = horarioRepository;
     this.bloqueioRepository = bloqueioRepository;
     this.reservaRepository = reservaRepository;
+    this.eventPublisher = eventPublisher;
   }
 
   executar({ clienteId, dados }) {
@@ -53,7 +55,7 @@ class CriarReserva {
       }
     }
 
-    return this.unitOfWork.run(() => {
+    const reservaPersistida = this.unitOfWork.run(() => {
       const ativas = this.reservaRepository.listarAtivasNaData(salao.id, dados.dataEvento);
       for (const r of ativas) {
         if (r.periodo().intersectaCom(periodo)) {
@@ -71,6 +73,14 @@ class CriarReserva {
 
       return this.reservaRepository.criar(reserva);
     });
+
+    if (this.eventPublisher) {
+      Promise.resolve()
+        .then(() => this.eventPublisher.publicar(reservaSolicitada(reservaPersistida)))
+        .catch(err => console.error('[eventos] falha ao publicar ReservaSolicitada:', err.message));
+    }
+
+    return reservaPersistida;
   }
 }
 
