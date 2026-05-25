@@ -25,7 +25,7 @@ actor "Prestador" as pres
 
 rectangle "FestaLink\n[Sistema]" as sys
 
-cloud "Upstash Redis\n[Sistema externo]\nRedis Pub/Sub gerenciado" as redis
+cloud "Redis\n[Sistema externo]\nMOM (Pub/Sub)" as redis
 
 cli --> sys : HTTPS / REST\n(JSON, JWT)
 pres --> sys : HTTPS / REST\n(JSON, JWT)\n+ WebSocket

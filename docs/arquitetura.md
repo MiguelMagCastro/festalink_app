@@ -8,9 +8,9 @@ O sistema é composto por três peças de software internas e um sistema externo
 
 As peças internas são dois aplicativos mobile em Flutter — um para o cliente e outro para o prestador — e um backend em Node.js com Express. O backend serve os dois apps via API REST, mantém o banco em arquivo SQLite local e troca eventos com o canal de mensagens. Os dois apps são executáveis separados: o cliente faz buscas e envia solicitações de reserva, o prestador recebe os pedidos e responde.
 
-O único sistema externo é o Upstash Redis, que atua como middleware orientado a mensagens (MOM). Ele transporta os eventos de domínio publicados pelo backend e os entrega ao consumidor que empurra notificação em tempo real para o app do prestador.
+O sistema depende de um Redis externo que atua como middleware orientado a mensagens (MOM). Para o ambiente de desenvolvimento e demonstração da disciplina, esse Redis é provido por um `docker-compose.yml` que sobe um container dedicado ao projeto, mas qualquer Redis acessível por URL atende. O MOM transporta os eventos de domínio publicados pelo backend e os entrega ao consumidor que empurra notificação em tempo real para o app do prestador.
 
-A comunicação dos apps com o backend é HTTPS com JSON no corpo e JWT no header `Authorization`. O backend conversa com o Upstash via protocolo Redis nativo. Adicionalmente, o app prestador abre uma conexão WebSocket persistente com o backend para receber as notificações de pedido novo sem precisar fazer polling contínuo, atendendo ao princípio de arquitetura orientada a eventos exigido no item 2.2 do enunciado da disciplina.
+A comunicação dos apps com o backend é HTTPS com JSON no corpo e JWT no header `Authorization`. O backend conversa com o Redis via protocolo Redis nativo (`ioredis`). Adicionalmente, o app prestador abre uma conexão WebSocket persistente com o backend para receber as notificações de pedido novo sem precisar fazer polling contínuo, atendendo ao princípio de arquitetura orientada a eventos exigido no item 2.2 do enunciado da disciplina.
 
 ## Por que essa stack
 
@@ -18,7 +18,7 @@ Cada decisão tem uma justificativa simples por trás:
 
 - Node.js + Express, pela familiaridade com JavaScript e por ter ecossistema bem servido para REST e WebSocket no mesmo processo.
 - SQLite em arquivo local, porque o enunciado aceita SQLite e isso elimina dependência externa na primeira sprint.
-- Redis Pub/Sub via Upstash, porque atende ao requisito de MOM sem exigir Docker nem hospedagem própria. O plano gratuito é suficiente para o escopo da disciplina.
+- Redis Pub/Sub como MOM, porque a topologia 1 produtor : 1 consumidor que o sistema precisa casa com pub/sub sem exigir filas, exchanges ou ACKs.
 - Flutter para os dois apps mobile, conforme exigido pelo enunciado.
 - JWT para autenticação, com claim de papel (cliente ou prestador) — simples o bastante para a Sprint 1 e suficiente para demonstrar Clean Architecture no backend.
 
@@ -30,7 +30,7 @@ O primeiro é entre os apps e o backend, via REST sobre HTTPS. Esse é o caminho
 
 O segundo é entre o backend e o app prestador, via WebSocket. O app prestador, ao abrir, estabelece uma conexão persistente com o backend e fica escutando. Quando chega um pedido novo, o backend publica um evento no Redis e um consumer dentro do próprio backend escuta o canal e empurra o evento via WebSocket para o prestador correto.
 
-O terceiro é entre o backend e o Upstash Redis, via protocolo Redis nativo. O backend é produtor e consumidor ao mesmo tempo: publica eventos quando o status de uma reserva muda — `ReservaSolicitada`, `ReservaAprovada`, `ReservaRecusada` — e consome o canal para repassar ao WebSocket. Essa separação é o que torna o sistema event-driven.
+O terceiro é entre o backend e o Redis, via protocolo Redis nativo. O backend é produtor e consumidor ao mesmo tempo: publica eventos quando o status de uma reserva muda — `ReservaSolicitada`, `ReservaAprovada`, `ReservaRecusada` — e consome o canal para repassar ao WebSocket. Essa separação é o que torna o sistema event-driven.
 
 O app cliente reflete mudanças de status (por exemplo, quando o prestador aprova uma reserva) via polling REST com intervalo curto. Esse caminho é aceito explicitamente no item 3.4 do enunciado para o app do cliente.
 
@@ -38,7 +38,7 @@ O app cliente reflete mudanças de status (por exemplo, quando o prestador aprov
 
 O backend segue Clean Architecture em quatro camadas, com a regra de dependência apontando sempre de fora para dentro:
 
-1. Frameworks e drivers, na camada mais externa: Express, lib `ws` para WebSocket, ioredis para conversar com o Upstash, driver SQLite.
+1. Frameworks e drivers, na camada mais externa: Express, lib `ws` para WebSocket, ioredis para conversar com o Redis, driver SQLite.
 2. Adapters: controllers HTTP, repositórios SQL, publisher e consumer de eventos, notificador WebSocket.
 3. Use cases (Application): regras de orquestração (criar reserva, aprovar, postar avaliação, responder avaliação) e portas (interfaces) que os adapters implementam.
 4. Domínio, na camada mais interna: entidades (`Usuario`, `Salao`, `HorarioFuncionamento`, `BloqueioData`, `Reserva`, `Avaliacao`) e eventos de domínio.

@@ -23,7 +23,7 @@ skinparam note {
 package "L1 — Frameworks e Drivers" as L1 {
   rectangle "Routes\n(Express)" as routes
   rectangle "WebSocket setup\n(lib ws)" as wssetup
-  rectangle "Redis client\n(ioredis para Upstash)" as redisc
+  rectangle "Redis client\n(ioredis)" as redisc
   rectangle "DB init\n(better-sqlite3)" as dbinit
 }
 

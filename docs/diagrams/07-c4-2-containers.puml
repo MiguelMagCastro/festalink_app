@@ -40,7 +40,7 @@ package "FestaLink (sistema)" {
   database "SQLite\n[Container: arquivo local]\nUsuários, salões, horários,\nbloqueios, reservas, avaliações" as db
 }
 
-cloud "Upstash Redis\n[Sistema externo]\nMOM (Pub/Sub)" as redis
+cloud "Redis\n[Sistema externo]\nMOM (Pub/Sub)" as redis
 
 cli --> appCli : usa
 pres --> appPres : usa

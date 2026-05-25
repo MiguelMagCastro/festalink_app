@@ -43,7 +43,7 @@ package "Backend (Node.js + Express — processo único)" as backend {
   package "L1 — Frameworks & Drivers" as L1 {
     rectangle "Express Routes\n+ JWT middleware" as routes
     rectangle "WebSocket Server\n(lib ws)" as wssetup
-    rectangle "ioredis client\n(→ Upstash)" as redisc
+    rectangle "ioredis client" as redisc
     rectangle "better-sqlite3\n(driver)" as dbinit
   }
 
@@ -68,7 +68,7 @@ package "Backend (Node.js + Express — processo único)" as backend {
 
 database "SQLite\n[arquivo local]\nusuários, salões, horários,\nbloqueios, reservas, avaliações" as db
 
-cloud "Upstash Redis\n[Sistema externo]\nMOM (Pub/Sub)" as redis
+cloud "Redis\n[Sistema externo]\nMOM (Pub/Sub)" as redis
 
 cli --> appCli : usa
 pres --> appPres : usa
@@ -107,7 +107,7 @@ note right of backend
 
   Fluxo event-driven (item 2.2 do enunciado):
   Use Case muda o status da reserva → publica
-  evento via IEventPublisher → Upstash entrega
+  evento via IEventPublisher → Redis entrega
   ao Event Consumer → consumer chama use case
   que usa IPrestadorNotifier → WS empurra para
   o app prestador conectado. O app cliente
