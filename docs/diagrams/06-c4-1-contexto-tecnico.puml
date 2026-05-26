@@ -25,24 +25,28 @@ actor "Prestador" as pres
 
 rectangle "FestaLink\n[Sistema]" as sys
 
-cloud "Redis\n[Sistema externo]\nMOM (Pub/Sub)" as redis
+cloud "RabbitMQ\n[Sistema externo]\nMOM (filas duráveis,\nmensagens persistentes)" as rabbit
 
 cli --> sys : HTTPS / REST\n(JSON, JWT)
 pres --> sys : HTTPS / REST\n(JSON, JWT)\n+ WebSocket
-sys --> redis : Redis protocol\n(publica e consome\neventos de reserva)
+sys --> rabbit : AMQP\n(publica e consome\neventos de reserva)
 
 note bottom of sys
   Composto pelos apps Flutter (cliente
-  e prestador), backend Node.js + Express
-  com SQLite local e canal WebSocket
-  para empurrar eventos ao app prestador.
-  Detalhamento dos containers em C4-2.
+  e prestador) e por dois processos Node.js
+  independentes: API (REST + publisher) e
+  Worker (consumer + WebSocket). SQLite
+  como banco local. Detalhamento dos
+  containers em C4-2.
 end note
 
-note bottom of redis
+note bottom of rabbit
   Único sistema externo do projeto.
   Atende ao requisito de MOM do enunciado
-  sem exigir Docker nem hospedagem própria.
+  com semântica de durabilidade: mensagens
+  publicadas enquanto o worker estiver
+  offline ficam enfileiradas e são
+  entregues quando ele reconecta.
 end note
 
 @enduml

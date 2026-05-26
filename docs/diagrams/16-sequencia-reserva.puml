@@ -17,13 +17,13 @@ skinparam sequence {
 }
 
 actor "Cliente\n(app cliente)" as Cli
-participant "API REST\n(Express)" as API
+participant "API REST\n(:3000)" as API
 participant "Use Case\nCriarReserva" as UCC
 database "SQLite" as DB
-participant "RedisEventPublisher" as Pub
-queue "Canal Redis\nfestalink:eventos" as Canal
-participant "RedisEventConsumer" as Cons
-participant "WebSocketNotifier" as WS
+participant "RabbitMQEventPublisher" as Pub
+queue "Exchange festalink.eventos\n+ Fila festalink.worker\n(RabbitMQ :5672)" as Fila
+participant "RabbitMQEventConsumer\n(Worker :3001)" as Cons
+participant "WebSocketNotifier\n(Worker :3001)" as WS
 actor "Prestador\n(app prestador)" as Prest
 
 == Criar reserva ==
@@ -36,10 +36,11 @@ UCC -> DB : commit
 UCC --> API : reserva persistida
 API --> Cli : 201 Created
 UCC ->> Pub : publicar(ReservaSolicitada)
-Pub ->> Canal : PUBLISH
-Canal ->> Cons : on('message')
+Pub ->> Fila : publish reserva.solicitada\n(persistent)
+Fila ->> Cons : consume + prefetch(1)
 Cons -> WS : notificarPrestadorDoSalao
 WS ->> Prest : push ReservaSolicitada
+Cons ->> Fila : ack manual
 
 == Aprovar reserva ==
 Prest -> API : PATCH /reservas/:id/aprovar\n(JWT prestador)
@@ -48,15 +49,20 @@ UCA -> DB : UPDATE status=aprovada
 UCA --> API : reserva atualizada
 API --> Prest : 200 OK
 UCA ->> Pub : publicar(ReservaAprovada)
-Pub ->> Canal : PUBLISH
-Canal ->> Cons : on('message')
+Pub ->> Fila : publish reserva.aprovada\n(persistent)
+Fila ->> Cons : consume
 Cons -> WS : notificarPrestadorDoSalao
 WS ->> Prest : push ReservaAprovada
+Cons ->> Fila : ack manual
 
-note over Pub, Canal
+note over Pub, Fila
   A publicação acontece após o commit
-  da transação e roda fora do caminho
-  da resposta HTTP, em microtarefa.
+  da transação. Mensagens são persistentes;
+  se o worker estiver offline, ficam na
+  fila e são entregues quando ele
+  reconecta. Em caso de erro de
+  processamento, o consumer faz nack
+  com requeue.
 end note
 
 @enduml

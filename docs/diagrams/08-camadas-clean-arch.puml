@@ -21,18 +21,18 @@ skinparam note {
 }
 
 package "L1 — Frameworks e Drivers" as L1 {
-  rectangle "Routes\n(Express)" as routes
-  rectangle "WebSocket setup\n(lib ws)" as wssetup
-  rectangle "Redis client\n(ioredis)" as redisc
+  rectangle "Routes\n(Express — só na API)" as routes
+  rectangle "WebSocket setup\n(lib ws — só no Worker)" as wssetup
+  rectangle "amqplib\n(producer na API,\nconsumer no Worker)" as amqp
   rectangle "DB init\n(better-sqlite3)" as dbinit
 }
 
 package "L2 — Adapters" as L2 {
   rectangle "HTTP Controllers" as ctrl
   rectangle "Repositórios SQL" as repo
-  rectangle "Event Publisher" as pub
-  rectangle "Event Consumer" as cons
-  rectangle "WS Notifier" as wsn
+  rectangle "Event Publisher\n(API)" as pub
+  rectangle "Event Consumer\n(Worker)" as cons
+  rectangle "WS Notifier\n(Worker)" as wsn
 }
 
 package "L3 — Use Cases / Application" as L3 {
@@ -47,8 +47,8 @@ package "L4 — Domínio (Entities)" as L4 {
 
 routes --> ctrl
 wssetup --> wsn
-redisc --> pub
-redisc --> cons
+amqp --> pub
+amqp --> cons
 dbinit --> repo
 
 ctrl --> uc
@@ -57,7 +57,7 @@ repo ..|> ports : implementa
 pub ..|> ports : implementa
 wsn ..|> ports : implementa
 
-cons --> uc : recebe evento\ne chama use case
+cons --> wsn : entrega evento\nao notifier
 
 uc --> ports
 uc --> ent
@@ -69,17 +69,17 @@ note as N1
   sempre de fora para dentro. As camadas
   internas não importam nada das externas.
 
+  O backend é dividido em dois processos
+  independentes que compartilham as camadas
+  L3 e L4. A API instancia Publisher; o
+  Worker instancia Consumer + WS Notifier.
+  A composição mora em src/composition.js
+  via comporApi() e comporWorker().
+
   As Ports (interfaces) ficam na camada de
   Use Cases e são implementadas pelos
   Adapters da camada externa via injeção
-  de dependência no boot da aplicação.
-
-  O Event Consumer é um adapter que escuta
-  o Redis e converte mensagens em chamadas
-  de use case. Por exemplo, ao consumir
-  ReservaSolicitada, chama um use case que
-  usa IPrestadorNotifier para empurrar o
-  evento ao app prestador conectado.
+  de dependência no boot de cada processo.
 end note
 
 @enduml

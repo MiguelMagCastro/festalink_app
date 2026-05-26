@@ -36,28 +36,32 @@ actor "Prestador" as pres
 package "FestaLink (sistema)" {
   rectangle "App Cliente\n[Container: Flutter]\nMobile Android" as appCli
   rectangle "App Prestador\n[Container: Flutter]\nMobile Android" as appPres
-  rectangle "Backend API\n[Container: Node.js + Express]\nREST + WebSocket\n(mesmo processo)" as api
+  rectangle "API\n[Container: Node.js + Express :3000]\nREST somente\n(publisher de eventos)" as api
+  rectangle "Worker\n[Container: Node.js :3001]\nConsumer + WebSocket\n(sem rotas HTTP)" as worker
   database "SQLite\n[Container: arquivo local]\nUsuários, salões, horários,\nbloqueios, reservas, avaliações" as db
 }
 
-cloud "Redis\n[Sistema externo]\nMOM (Pub/Sub)" as redis
+cloud "RabbitMQ\n[Sistema externo — :5672]\nMOM (exchange topic durável\n+ fila durável)" as rabbit
 
 cli --> appCli : usa
 pres --> appPres : usa
 
 appCli --> api : HTTPS / REST\n(JSON, JWT)
 appPres --> api : HTTPS / REST\n(JSON, JWT)
-appPres <--> api : WebSocket\n(conexão persistente\npara eventos)
+appPres <--> worker : WebSocket\n(conexão persistente\npara eventos)
 
 api --> db : SQL\n(lib SQLite no Node)
-api --> redis : publica e consome\neventos de reserva\n(Redis protocol)
+worker --> db : SQL\n(leitura de salões\npara roteamento)
+api --> rabbit : publica eventos\nReservaSolicitada/Aprovada/Recusada\n(AMQP, persistent)
+worker <-- rabbit : consome eventos\n(AMQP, ack manual,\nfila durável)
 
 note as N1
-  O backend expõe REST e WebSocket no mesmo
-  processo Node. Atua como produtor (publica
-  eventos ao mudar status de reserva) e como
-  consumidor (escuta o canal e empurra para os
-  WebSockets dos prestadores conectados).
+  Três processos independentes. A API só publica.
+  O worker só consome e empurra pelo WebSocket.
+  RabbitMQ é o ponto de desacoplamento — se o
+  worker cai, mensagens acumulam na fila e são
+  entregues quando ele volta. API segue operando
+  normalmente independentemente do estado do worker.
 end note
 
 @enduml
