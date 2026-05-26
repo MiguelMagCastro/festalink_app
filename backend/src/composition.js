@@ -10,8 +10,8 @@ const { AvaliacaoRepository } = require('./repositories/AvaliacaoRepository');
 const { HashService } = require('./infra/HashService');
 const { TokenService } = require('./infra/TokenService');
 const { UnitOfWork } = require('./infra/UnitOfWork');
-const { RedisEventPublisher } = require('./infra/RedisEventPublisher');
-const { RedisEventConsumer } = require('./infra/RedisEventConsumer');
+const { RabbitMQEventPublisher } = require('./infra/RabbitMQEventPublisher');
+const { RabbitMQEventConsumer } = require('./infra/RabbitMQEventConsumer');
 const { WebSocketNotifier } = require('./infra/WebSocketNotifier');
 
 const { RegistrarUsuario } = require('./services/auth/RegistrarUsuario');
@@ -50,7 +50,7 @@ const { ReservaController } = require('./controllers/ReservaController');
 const { AvaliacaoController } = require('./controllers/AvaliacaoController');
 const { criarAutenticar, exigirPapel } = require('./middleware/authMiddleware');
 
-function compor() {
+function comporBaseInfra() {
   const db = getDatabase();
 
   const usuarioRepository = new UsuarioRepository(db);
@@ -60,39 +60,40 @@ function compor() {
   const reservaRepository = new ReservaRepository(db);
   const avaliacaoRepository = new AvaliacaoRepository(db);
 
-  const hashService = new HashService();
   const tokenService = new TokenService({
     secret: process.env.JWT_SECRET,
     expiresIn: process.env.JWT_EXPIRES_IN,
   });
-  const unitOfWork = new UnitOfWork(db);
 
-  const redisUrl = process.env.REDIS_URL;
-  const canalEventos = process.env.EVENTOS_CANAL || 'festalink:eventos';
-  const wsPort = Number(process.env.WS_PORT || 3001);
-
-  const eventPublisher = redisUrl
-    ? new RedisEventPublisher({ url: redisUrl, canal: canalEventos })
-    : null;
-
-  const wsNotifier = new WebSocketNotifier({
-    porta: wsPort,
+  return {
+    db,
+    repositories: {
+      usuarioRepository, salaoRepository, horarioRepository,
+      bloqueioRepository, reservaRepository, avaliacaoRepository,
+    },
     tokenService,
-    salaoRepository,
-  });
+  };
+}
 
-  const eventConsumer = redisUrl
-    ? new RedisEventConsumer({
-        url: redisUrl,
-        canal: canalEventos,
-        onEvento: (evento) => {
-          console.log(`[consumer] ${evento.type} salao=${evento.payload?.salaoId} reserva=${evento.payload?.reservaId}`);
-          if (evento.payload?.salaoId) {
-            wsNotifier.notificarPrestadorDoSalao(evento.payload.salaoId, evento);
-          }
-        },
-      })
-    : null;
+function comporApi() {
+  const base = comporBaseInfra();
+  const { repositories, tokenService } = base;
+  const {
+    usuarioRepository, salaoRepository, horarioRepository,
+    bloqueioRepository, reservaRepository, avaliacaoRepository,
+  } = repositories;
+
+  const hashService = new HashService();
+  const unitOfWork = new UnitOfWork(base.db);
+
+  const rabbitUrl = process.env.RABBITMQ_URL;
+  const exchange = process.env.EVENTOS_EXCHANGE || 'festalink.eventos';
+
+  if (!rabbitUrl) {
+    throw new Error('RABBITMQ_URL não definida: API precisa do broker pra publicar eventos');
+  }
+
+  const eventPublisher = new RabbitMQEventPublisher({ url: rabbitUrl, exchange });
 
   const registrarUsuario = new RegistrarUsuario({ usuarioRepository, hashService });
   const login = new Login({ usuarioRepository, hashService, tokenService });
@@ -133,58 +134,73 @@ function compor() {
 
   const authController = new AuthController({ registrarUsuario, login, obterMeuPerfil });
   const salaoController = new SalaoController({
-    criarSalao,
-    listarSaloes,
-    listarMeusSaloes,
-    obterSalao,
-    atualizarSalao,
-    excluirSalao,
-    definirHorarios,
-    criarBloqueio,
-    listarBloqueios,
-    removerBloqueio,
+    criarSalao, listarSaloes, listarMeusSaloes, obterSalao,
+    atualizarSalao, excluirSalao, definirHorarios,
+    criarBloqueio, listarBloqueios, removerBloqueio,
   });
   const reservaController = new ReservaController({
-    criarReserva,
-    listarMinhasReservas,
-    listarReservasRecebidas,
-    aprovarReserva,
-    recusarReserva,
-    cancelarReserva,
+    criarReserva, listarMinhasReservas, listarReservasRecebidas,
+    aprovarReserva, recusarReserva, cancelarReserva,
   });
   const avaliacaoController = new AvaliacaoController({
-    postarAvaliacao,
-    editarAvaliacao,
-    excluirAvaliacao,
-    listarAvaliacoesDoSalao,
-    responderAvaliacao,
-    editarResposta,
-    excluirResposta,
+    postarAvaliacao, editarAvaliacao, excluirAvaliacao,
+    listarAvaliacoesDoSalao, responderAvaliacao,
+    editarResposta, excluirResposta,
   });
 
   const autenticar = criarAutenticar({ tokenService });
 
   return {
-    repositories: {
-      usuarioRepository, salaoRepository, horarioRepository,
-      bloqueioRepository, reservaRepository, avaliacaoRepository,
-    },
+    repositories,
     services: { hashService, tokenService, unitOfWork },
-    infra: { eventPublisher, eventConsumer, wsNotifier },
-    useCases: {
-      registrarUsuario, login, obterMeuPerfil,
-      criarSalao, listarSaloes, listarMeusSaloes, obterSalao,
-      atualizarSalao, excluirSalao, definirHorarios,
-      criarBloqueio, listarBloqueios, removerBloqueio,
-      criarReserva, listarMinhasReservas, listarReservasRecebidas,
-      aprovarReserva, recusarReserva, cancelarReserva,
-      postarAvaliacao, editarAvaliacao, excluirAvaliacao,
-      listarAvaliacoesDoSalao, responderAvaliacao,
-      editarResposta, excluirResposta,
-    },
+    infra: { eventPublisher },
     controllers: { authController, salaoController, reservaController, avaliacaoController },
     middlewares: { autenticar, exigirPapel },
   };
 }
 
-module.exports = { compor };
+function comporWorker() {
+  const base = comporBaseInfra();
+  const { repositories, tokenService } = base;
+  const { salaoRepository } = repositories;
+
+  const rabbitUrl = process.env.RABBITMQ_URL;
+  const exchange = process.env.EVENTOS_EXCHANGE || 'festalink.eventos';
+  const fila = process.env.EVENTOS_FILA_WORKER || 'festalink.worker';
+  const routingKeys = (process.env.EVENTOS_ROUTING_KEYS || 'reserva.#')
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean);
+  const wsPort = Number(process.env.WS_PORT || 3001);
+
+  if (!rabbitUrl) {
+    throw new Error('RABBITMQ_URL não definida: worker precisa do broker pra consumir eventos');
+  }
+
+  const wsNotifier = new WebSocketNotifier({
+    porta: wsPort,
+    tokenService,
+    salaoRepository,
+  });
+
+  const eventConsumer = new RabbitMQEventConsumer({
+    url: rabbitUrl,
+    exchange,
+    fila,
+    routingKeys,
+    onEvento: async (evento) => {
+      console.log(`[consumer] ${evento.type} salao=${evento.payload?.salaoId} reserva=${evento.payload?.reservaId}`);
+      if (evento.payload?.salaoId) {
+        wsNotifier.notificarPrestadorDoSalao(evento.payload.salaoId, evento);
+      }
+    },
+  });
+
+  return {
+    repositories,
+    services: { tokenService },
+    infra: { eventConsumer, wsNotifier },
+  };
+}
+
+module.exports = { comporApi, comporWorker };
