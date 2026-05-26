@@ -3,10 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "description": "Backend REST do FestaLink",
-  "main": "src/server.js",
+  "main": "src/api.js",
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "nodemon src/server.js",
+    "start:api": "node src/api.js",
+    "start:worker": "node src/worker.js",
+    "dev:api": "nodemon src/api.js",
+    "dev:worker": "nodemon src/worker.js",
     "test": "jest",
     "test:watch": "jest --watch"
   },
@@ -14,11 +16,11 @@
     "node": ">=20"
   },
   "dependencies": {
+    "amqplib": "^0.10.4",
     "bcryptjs": "^2.4.3",
     "better-sqlite3": "^11.3.0",
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
-    "ioredis": "^5.10.1",
     "jsonwebtoken": "^9.0.2",
     "ws": "^8.21.0"
   },
