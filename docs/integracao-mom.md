@@ -1,61 +1,80 @@
 # Relatório de integração com MOM — Sprint 2
 
-## Objetivo
+## O que essa sprint pediu
 
-Integrar um middleware orientado a mensagens (MOM) ao backend do FestaLink e usar essa camada para tornar a notificação do prestador assíncrona, atendendo ao item 2.2 do enunciado, que exige arquitetura orientada a eventos e veda polling contínuo no app do prestador.
+A Sprint 2 do enunciado pede pra integrar um middleware orientado a mensagens no backend e usar essa camada pra notificar o prestador de forma assíncrona. O item 2.2 é direto: arquitetura orientada a eventos, e o app do prestador não pode ficar fazendo polling pra ver se chegou pedido novo.
 
-A meta acrescentada na execução foi que a notificação seja durável: se o processo que escuta a fila estiver fora do ar quando o evento for publicado, a mensagem precisa ser entregue assim que ele reconectar, sem perda.
+Acrescentei um requisito meu na execução: a notificação tem que ser durável. Ou seja, se o processo que escuta a fila estiver fora do ar no momento em que o evento for publicado, a mensagem precisa esperar e ser entregue assim que ele voltar. Isso não está escrito assim no enunciado, mas qualquer sistema de mensagens de verdade tem essa propriedade, e eu queria que o meu também tivesse.
 
-## Tecnologias escolhidas
+## A escolha do broker
 
-A escolha foi RabbitMQ provisionado via Docker Compose, em container dedicado ao projeto (`festalink-rabbitmq`, porta 5672 do host para AMQP e 15672 para a UI de administração). RabbitMQ oferece filas duráveis com mensagens persistentes em disco, o que atende diretamente o requisito de durabilidade. A primeira tentativa foi com Redis Pub/Sub, mas o modo pub/sub do Redis é fire-and-forget por design e descarta a mensagem se nenhum subscriber estiver conectado no instante da publicação. Migrar para RabbitMQ foi a forma de resolver esse problema sem fugir das opções permitidas pelo enunciado.
+A primeira versão foi com Redis Pub/Sub. O setup é barato, o cliente Node (`ioredis`) é fácil, e parecia atender o que o enunciado pedia. Aí descobri o problema: `PUBLISH` no Redis é fire-and-forget. Se ninguém estiver inscrito no canal naquele instante, a mensagem é descartada e nunca volta. Isso quebra o requisito de durabilidade que eu tinha colocado.
 
-A topologia escolhida no RabbitMQ é um exchange `topic` durável (`festalink.eventos`) com uma fila durável (`festalink.worker`) ligada por routing key `reserva.#`. As mensagens são publicadas com `persistent: true`, e o consumer faz `prefetch(1)` com `ack` manual e `nack` com requeue em caso de erro. A biblioteca usada no lado Node é o `amqplib`.
+Troquei pra RabbitMQ. Está listado no enunciado como alternativa válida ("RabbitMQ ou Redis Pub/Sub") e tem filas duráveis com mensagens persistentes em disco de fábrica. Não precisei inventar nada, só configurar direito.
 
-Para empurrar o evento ao app do prestador foi adotada a biblioteca `ws`, que oferece um WebSocket server mínimo, sem protocolo proprietário em cima. A autenticação no handshake reaproveita o `TokenService` já usado pelo middleware HTTP, mantendo uma única fonte de verdade para JWT.
+Subi o RabbitMQ via Docker Compose, num container dedicado ao projeto (`festalink-rabbitmq`). A porta 5672 do host é a porta AMQP onde a API e o worker conectam. A 15672 é a UI de admin, que foi muito útil pra debugar durante o desenvolvimento: dá pra ver as filas, conexões, contadores de mensagens, tudo em tempo real. O usuário/senha que configurei é `festalink/festalink`.
 
-## Arquitetura final
+A topologia que escolhi é um exchange `topic` durável chamado `festalink.eventos`, com uma fila durável `festalink.worker` bindada nele pela routing key `reserva.#`. Cada evento entra no exchange com routing key derivada do tipo (`ReservaSolicitada` vira `reserva.solicitada`, `ReservaAprovada` vira `reserva.aprovada`). Publico com `persistent: true` e uso `createConfirmChannel` no producer, então a API só considera a publicação concluída quando o broker confirma que recebeu. No consumer rodo com `prefetch(1)` e `ack` manual, e se der erro no processamento faço `nack` com requeue.
 
-O backend foi dividido em dois processos independentes, alinhando o desenho à exigência de comunicação assíncrona via broker e à propriedade de durabilidade discutida acima:
+Considerei usar um exchange `direct` em vez de `topic`, mas o `topic` deixa mais fácil adicionar novos tipos de evento depois sem mudar o binding (basta seguir o padrão `reserva.*`). Pra usar o `amqplib` (versão Promise, não a com callback).
 
-- O processo de **API** (`node src/api.js`, porta 3000) serve as rotas REST do Express, lê e escreve no SQLite local e atua como único produtor de eventos. Instancia o `RabbitMQEventPublisher`.
-- O processo de **Worker** (`node src/worker.js`, porta 3001) é exclusivamente consumidor. Instancia o `RabbitMQEventConsumer` ligado à fila durável e o `WebSocketNotifier` que mantém o servidor WebSocket aberto para o app do prestador.
+## A separação em três processos
 
-Os dois processos compartilham o código de domínio, de use cases e de repositórios, mas instanciam infraestrutura distinta no boot. A composição mora em `backend/src/composition.js`, em duas funções: `comporApi()` para o processo de API e `comporWorker()` para o de Worker.
+Pra deixar o desacoplamento entre produtor e consumidor visível no desenho, dividi o backend em dois processos Node que se comunicam só pelo broker. Na versão anterior era tudo um único processo Node que publicava e consumia ao mesmo tempo. Funcionava, mas dá pra fingir que produtor e consumidor são a mesma coisa quando eles moram no mesmo executável, e não são.
 
-Três adapters foram introduzidos na camada externa, todos implementando portas que vivem na camada de Use Cases:
+Os três processos do sistema ficaram:
 
-- `RabbitMQEventPublisher` publica envelopes JSON no exchange `festalink.eventos` com routing key derivada do tipo do evento (`ReservaSolicitada` → `reserva.solicitada`). Usa channel em modo `confirm`, então cada publicação só resolve quando o broker confirma a persistência.
-- `RabbitMQEventConsumer` declara fila durável e binding, consome com `prefetch(1)` e ACK manual, e despacha cada mensagem para uma função de callback configurada no composition root.
-- `WebSocketNotifier` mantém um pool de conexões por `prestadorId` e expõe `notificarPrestadorDoSalao`, que consulta o repositório de salões e empurra o evento ao dono.
+- A API (`node src/api.js`, porta 3000) tem o Express com todas as rotas REST, lê e escreve no SQLite, e publica eventos no RabbitMQ. Não consome nada, não tem WebSocket.
+- O RabbitMQ é o container do Docker na porta 5672. Recebe mensagens da API e entrega ao worker.
+- O Worker (`node src/worker.js`, porta 3001) consome eventos do RabbitMQ e mantém o servidor WebSocket aberto pra empurrar notificações pro app do prestador. Sem rotas HTTP.
 
-Os use cases `CriarReserva`, `AprovarReserva` e `RecusarReserva` recebem uma dependência `eventPublisher` e publicam o evento de domínio correspondente em microtarefa, depois do commit da transação. O wiring acontece em `composition.js` e respeita a regra de dependência: domínio e use cases não conhecem `amqplib` nem `ws`, só interfaces.
+Os dois processos Node compartilham o código de domínio, use cases e repositórios. A diferença está só na composição da infra: o `composition.js` agora tem duas funções, `comporApi()` e `comporWorker()`, que instanciam só o que cada lado precisa. Se um dia eu quisesse rodar a API numa máquina e o worker em outra, daria pra fazer sem nenhuma mudança no código, só apontando os dois pra um RabbitMQ acessível.
 
-## Demonstração da comunicação assíncrona
+Na prática isso funciona bem. Eu posso derrubar o worker sem afetar a API, e a recíproca também vale.
 
-Foi escrito um cliente WebSocket de teste em `backend/scripts/ws-client.js`. Ele conecta no servidor WebSocket do Worker passando um JWT de prestador na query string e imprime no console todo evento recebido.
+## Os adapters
 
-No teste manual, com a API e o Worker rodando em terminais separados e um prestador autenticado pelo cliente WS, foi disparado o fluxo:
+Na camada externa entraram dois adapters novos. Cada um implementa uma porta da camada de use cases:
 
-1. Cliente envia `POST /reservas` via REST para a API.
-2. A API persiste no SQLite, publica `ReservaSolicitada` no exchange RabbitMQ (com `publisher confirm`).
-3. O RabbitMQ entrega a mensagem à fila `festalink.worker` por binding.
-4. O Worker consome com ACK manual, despacha ao `WebSocketNotifier`.
-5. O socket aberto pelo prestador recebe o envelope.
-6. Em seguida, o prestador chama `PATCH /reservas/:id/aprovar`. O ciclo se repete com `ReservaAprovada`.
+- O `RabbitMQEventPublisher` faz `connect`, abre um `confirmChannel`, declara o exchange e publica os envelopes JSON. A routing key é derivada do `evento.type` por uma função simples que converte PascalCase pra dot-snake.
+- O `RabbitMQEventConsumer` faz `connect`, abre um channel normal, declara o exchange e a fila, binda com as routing keys que vêm do `.env`, configura `prefetch(1)`, registra o consumer com ack manual e despacha cada mensagem pra um callback configurado no boot.
 
-Os logs do Worker mostram cada passagem pelo consumer (`[consumer] ReservaSolicitada salao=4 reserva=4`), e o cliente WS registra a chegada dos dois eventos com timestamps abaixo de 50 ms de diferença entre a publicação e a entrega.
+O `WebSocketNotifier` já existia da versão anterior e não precisou mudar. Ele mantém um Map de `prestadorId → Set<WebSocket>`, valida o JWT no handshake e entrega o envelope ao socket certo via `notificarPrestadorDoSalao`.
 
-Para evidenciar a durabilidade, um segundo teste manual foi feito: o Worker foi derrubado com `Ctrl+C`, uma nova reserva foi criada via REST, a UI do RabbitMQ em `:15672` mostrou a mensagem acumulada na fila `festalink.worker`, e ao subir o Worker novamente o evento foi consumido e empurrado pelo WebSocket imediatamente, sem perda.
+Os use cases que publicam eventos (`CriarReserva`, `AprovarReserva`, `RecusarReserva`) recebem `eventPublisher` por injeção e publicam o evento em microtarefa depois do `commit` da transação. Eles não conhecem `amqplib` nem `ws`, usam só a interface `publicar(evento)`. Isso pagou dividendos na hora da migração: os testes Jest dos três use cases passaram sem alteração, porque os mocks também usavam a mesma interface.
 
-## Suite de testes automatizados
+## A demonstração
 
-Os testes da Sprint 2 verificam que `CriarReserva`, `AprovarReserva` e `RecusarReserva` chamam `eventPublisher.publicar` exatamente uma vez no caminho feliz, com o `type` e o `payload` corretos, e que não publicam nada quando a operação principal falha por autorização ou recurso inexistente. Os mocks usam apenas a interface (`publicar`), então sobreviveram à troca do adapter de Redis para RabbitMQ sem alteração. A regressão da Sprint 1 continua passando integralmente.
+Pra mostrar o fluxo, tem um cliente WebSocket de teste em `backend/scripts/ws-client.js`. Ele recebe um JWT de prestador na linha de comando, conecta no worker e imprime cada mensagem que chega.
 
-## Limitações conhecidas e próximos passos
+O roteiro do teste manual foi mais ou menos esse:
 
-A publicação não é transacionalmente consistente com o INSERT — se a API morrer entre o commit no SQLite e o `publish` ao broker, o evento é perdido. Mesmo com o channel em modo `confirm`, isso só garante durabilidade depois que o broker confirma a recepção. Para a Sprint 2 esse risco é aceitável, dado o escopo acadêmico. Uma versão de produção usaria padrão Outbox: persistir o evento na mesma transação do SQLite e ter um publisher dedicado lendo a tabela e empurrando ao broker em segundo plano.
+1. Subi o RabbitMQ via `docker compose up -d` e esperei o healthcheck passar.
+2. Subi API e worker em terminais separados (`npm run dev:api` num, `npm run dev:worker` em outro).
+3. Em outro terminal, conectei o `ws-client.js` com o JWT do prestador. Logo chegou `{"type":"Conectado","prestadorId":N}`, sinal de que a sessão WS está aberta.
+4. Em mais um terminal, mandei `POST /reservas` como cliente via curl. A reserva entrou no banco, a API publicou `ReservaSolicitada` no exchange, o worker consumiu, e o evento apareceu no terminal do `ws-client.js` em menos de 10 ms de diferença entre o `criadoEm` da reserva e o timestamp da chegada.
+5. Pra validar a durabilidade, derrubei o worker com Ctrl+C, criei mais uma reserva e aprovei a anterior. Olhei a fila pela UI do RabbitMQ em `localhost:15672` e mostrava `messages: 2, consumers: 0`. Subi o worker de volta e ele consumiu o backlog imediatamente, a fila zerou, e os dois eventos apareceram nos logs do consumer.
 
-O WebSocket atual mantém o pool em memória do processo único do Worker. Em deploy escalado horizontalmente com múltiplos workers, RabbitMQ distribuiria as mensagens entre eles em modelo de competing consumers, e o socket de um prestador pode estar em outro worker que o que consome a mensagem. Para resolver isso seria necessário um fan-out por broker (exchange separado de notificações, com uma fila por worker) ou um registry compartilhado de sessões. O desenho atual com um Worker único cobre o escopo da disciplina.
+O log do worker durante o teste fica direto:
 
-A Sprint 3 adicionará o app cliente Flutter consumindo a REST com polling, conforme o item 3.4 do enunciado. A Sprint 4 adicionará o app prestador em Flutter que abrirá o WebSocket descrito aqui, completando o fluxo ponta-a-ponta.
+```
+[consumer] ReservaSolicitada salao=6 reserva=7
+[consumer] ReservaSolicitada salao=6 reserva=8
+[consumer] ReservaAprovada salao=6 reserva=7
+```
+
+## Testes automatizados
+
+A bateria de testes Jest cobre o comportamento dos use cases que publicam eventos. Os mocks de `eventPublisher` usam só a interface `publicar`, então a troca de Redis pra RabbitMQ passou sem mexer numa linha de teste. Os testes verificam que `CriarReserva`, `AprovarReserva` e `RecusarReserva` chamam `publicar` uma vez no caminho feliz com o `type` e o `payload` corretos, que não publicam nada quando a operação falha por validação ou autorização, e que a publicação acontece depois do commit (a ordem das chamadas é verificada pelo mock do `unitOfWork`). A regressão da Sprint 1 continua passando inteira.
+
+## Limitações que eu reconheço
+
+Duas coisas ainda não estão no estado em que ficariam num sistema de produção.
+
+A primeira é que a publicação do evento não está na mesma transação do INSERT. Se a API morrer entre o `commit` do SQLite e o `publish` ao broker, o evento é perdido: o cliente vê a reserva no banco, mas o prestador nunca recebe a notificação. Mesmo com o channel em `confirm`, o `confirm` só me ajuda depois que o `publish` foi chamado. Pra resolver isso direito o caminho é padrão Outbox: persistir o evento na mesma transação numa tabela `outbox` e ter um worker dedicado lendo essa tabela e empurrando ao broker. Pro escopo da disciplina aceitei a janela de risco e deixei anotado aqui.
+
+A segunda é que a durabilidade vai do broker até o worker, mas não vai do worker até o app. Se o app do prestador estiver offline quando o worker processar a mensagem, o `WebSocketNotifier` tenta entregar pra zero sockets e o worker faz `ack` do mesmo jeito. A mensagem some do ponto de vista do usuário final. Pra cobrir isso seria push notification (FCM) ou um endpoint REST de notificações pendentes que o app consulta quando reconecta. Fica fora do escopo da Sprint 2 mas é um próximo passo natural.
+
+## Próximos passos
+
+A Sprint 3 vai trazer o app cliente Flutter, que consome a REST com polling. O item 3.4 do enunciado libera polling pro cliente, então não precisa de WebSocket desse lado. A Sprint 4 vai trazer o app prestador, e é ele que vai abrir o WebSocket descrito aqui. Quando os dois apps estiverem no ar, o fluxo ponta-a-ponta fica visível: cliente solicita pelo app, prestador recebe push em tempo real via WS, aprova pelo app, e o cliente vê a aprovação no próximo polling.
