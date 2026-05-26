@@ -29,8 +29,8 @@ docker-compose.yml   container Redis dedicado ao projeto
 - [Proposta de domínio (PDF)](docs/proposta.pdf) — descrição do problema, perfis e funcionalidades.
 - [Arquitetura](docs/arquitetura.md) — visão geral, comunicação e organização do backend.
 - [Schema do banco](docs/schema-db.md) — modelagem física do SQLite.
-- [Eventos de domínio](docs/eventos.md) — catálogo de eventos publicados no MOM com formato e canal.
-- [Relatório de integração com MOM (Sprint 2)](docs/integracao-mom.md) — escolhas e demonstração do fluxo assíncrono.
+- [Eventos de domínio (PDF)](docs/eventos.pdf) — catálogo de eventos publicados no MOM com formato e canal.
+- [Relatório de integração com MOM (PDF)](docs/integracao-mom.pdf) — Sprint 2: escolhas e demonstração do fluxo assíncrono.
 - [Diagramas](docs/diagrams/rendered/) — visão geral, contexto, casos de uso, jornada, sitemap, C4-1, C4-2, camadas (Clean Architecture), modelo conceitual, modelo lógico, domínio, APIs, papéis, sequência da reserva, atividades do prestador e estados da reserva.
 
 ## Status
