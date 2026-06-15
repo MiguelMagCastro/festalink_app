@@ -1,0 +1,54 @@
+@startuml
+title FestaLink — Sitemap do App Cliente (Sprint 3)
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundCorner 10
+skinparam defaultFontName "Helvetica"
+skinparam rectangle {
+  BackgroundColor #F5F7FB
+  BorderColor #4B5563
+  FontColor #111827
+}
+skinparam package {
+  BackgroundColor #FAFBFD
+  BorderColor #9CA3AF
+  FontColor #374151
+}
+skinparam note {
+  BackgroundColor #FFF7E6
+  BorderColor #B58900
+}
+
+rectangle "Boot\n(restaura sessão)" as boot
+rectangle "Login" as login
+rectangle "Cadastro\n(cliente)" as cadastro
+
+boot --> login : sem token salvo
+login --> cadastro
+cadastro --> login
+
+package "Home (barra inferior)" as home {
+  rectangle "Salões\n(tab)" as tabSaloes
+  rectangle "Minhas reservas\n(tab)" as tabReservas
+}
+
+rectangle "Detalhe do salão\n(horários, bloqueios,\navaliações)" as detalhe
+rectangle "Nova reserva\n(data + horário)" as criar
+
+boot --> tabSaloes : token válido
+login --> tabSaloes : autenticado
+tabSaloes --> detalhe
+detalhe --> criar
+criar --> tabReservas : após solicitar
+
+note as N1
+  A aba "Minhas reservas" faz polling
+  periódico em GET /reservas/minhas e
+  reflete a aprovação ou recusa do
+  prestador sem ação do usuário. O
+  cancelamento respeita a regra de 48h
+  do backend.
+end note
+
+@enduml

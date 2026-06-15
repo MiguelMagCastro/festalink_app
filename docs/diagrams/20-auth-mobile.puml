@@ -1,0 +1,52 @@
+@startuml
+title FestaLink — Autenticação no App Cliente
+
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName "Helvetica"
+skinparam sequence {
+  ArrowColor #4B5563
+  LifeLineBorderColor #9CA3AF
+  ParticipantBackgroundColor #F5F7FB
+  ParticipantBorderColor #4B5563
+  ActorBackgroundColor #F5F7FB
+  ActorBorderColor #4B5563
+}
+skinparam note {
+  BackgroundColor #FFF7E6
+  BorderColor #B58900
+}
+
+actor Cliente
+participant "App\n(Flutter)" as App
+participant "SessionStore\n(SharedPreferences)" as Store
+participant "API REST\n/auth" as API
+
+== Abertura do app ==
+App -> Store : ler token salvo
+alt token existe
+  Store --> App : token + dados
+  App -> App : injeta Bearer e abre a Home
+else sem token
+  App --> Cliente : exibe tela de Login
+end
+
+== Login ou cadastro ==
+Cliente -> App : e-mail e senha
+App -> API : POST /auth/login\n(ou POST /auth/registrar e login)
+API --> App : { token, usuario }
+App -> Store : salva token + dados
+App -> App : ApiClient passa a injetar\nAuthorization: Bearer <token>
+
+== Chamadas autenticadas ==
+App -> API : GET /saloes, POST /reservas, ...
+API --> App : 200 / 201 (ou 401 se expirado)
+
+note over App, API
+  O JWT fica guardado no aparelho e é
+  injetado por um interceptor do Dio em
+  todas as requisições. Diante de um 401,
+  o app limpa a sessão e volta ao Login.
+end note
+
+@enduml
