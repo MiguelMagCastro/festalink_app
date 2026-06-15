@@ -19,7 +19,8 @@ backend/                 dois processos Node.js (API e Worker)
   src/api.js             entry point da API REST (publisher de eventos)
   src/worker.js          entry point do worker (consumer + WebSocket)
   src/composition.js     comporApi() e comporWorker() para DI
-apps/                    apps Flutter (cliente e prestador)
+apps/                    apps Flutter
+  cliente/               app cliente (Sprint 3)
 docs/                    proposta, diagramas e documentação técnica
 docs/diagrams/           fontes PUML
 docs/diagrams/rendered/  PNGs renderizados
@@ -31,16 +32,17 @@ docker-compose.yml       container RabbitMQ dedicado ao projeto
 
 - [Proposta de domínio (PDF)](docs/proposta.pdf) — descrição do problema, perfis e funcionalidades.
 - [Arquitetura](docs/arquitetura.md) — visão geral, comunicação e organização do backend em três processos.
+- [App cliente (Flutter)](docs/app-cliente.md) — arquitetura em camadas, telas e atualização por polling do app da Sprint 3.
 - [Schema do banco](docs/schema-db.md) — modelagem física do SQLite.
 - [Eventos de domínio (PDF)](docs/eventos.pdf) — catálogo de eventos publicados no MOM com formato, exchange e routing keys.
 - [Relatório de integração com MOM (PDF)](docs/integracao-mom.pdf) — Sprint 2: escolha do broker, demonstração do fluxo assíncrono e limitações.
-- [Diagramas](docs/diagrams/rendered/) — visão geral, contexto, casos de uso, jornada, sitemap, C4-1, C4-2, camadas (Clean Architecture), modelo conceitual, modelo lógico, domínio, APIs, papéis, sequência da reserva, atividades do prestador e estados da reserva.
+- [Diagramas](docs/diagrams/rendered/) — visão geral, contexto, casos de uso, jornada, sitemap, C4-1, C4-2, camadas (Clean Architecture), modelo conceitual, modelo lógico, domínio, APIs, papéis, sequência da reserva, atividades do prestador, estados da reserva, sitemap do app cliente e autenticação mobile.
 
 ## Status
 
 - [x] Sprint 1 — entregue em 11/05/2026 (proposta, 13 diagramas, backend REST com 24 endpoints, coleção Postman).
 - [x] Sprint 2 — entregue em 25/05/2026 (MOM com RabbitMQ em arquitetura de três processos, WebSocket pro prestador, três eventos de domínio, três diagramas novos e relatório de integração).
-- [ ] Sprint 3 — app cliente em Flutter (entrega 15/06/2026).
+- [x] Sprint 3 — entregue em 15/06/2026 (app cliente em Flutter: lista de salões, detalhe, criar reserva e minhas reservas com atualização por polling; leitura pública de horários e bloqueios na API; dois diagramas novos).
 - [ ] Sprint 4 — app prestador em Flutter e entrega final (03/07/2026).
 
 ## Como rodar o backend
@@ -131,7 +133,7 @@ rm backend/festalink.db backend/festalink.db-wal backend/festalink.db-shm
 
 ### Endpoints
 
-A API expõe 24 endpoints divididos em quatro grupos: autenticação, salões (com horários e bloqueios), reservas e avaliações. A coleção Postman completa está em `postman/festalink.postman_collection.json`.
+A API expõe 25 endpoints divididos em quatro grupos: autenticação, salões (com horários e bloqueios), reservas e avaliações. A leitura de horários e de bloqueios de um salão é aberta a qualquer usuário autenticado, para o app cliente exibir a disponibilidade. A coleção Postman completa está em `postman/festalink.postman_collection.json`.
 
 ### Suite de testes
 
@@ -142,6 +144,41 @@ npm test
 ```
 
 Cobre entidades de domínio e use cases críticos, incluindo a publicação de eventos depois do commit das transações.
+
+## Como rodar o app cliente (Flutter)
+
+O app cliente fica em `apps/cliente`. Pré-requisitos: Flutter no canal stable e um emulador Android ou aparelho físico com depuração USB. A arquitetura está descrita em [docs/app-cliente.md](docs/app-cliente.md).
+
+Com o backend no ar:
+
+```bash
+cd apps/cliente
+flutter pub get
+flutter run
+```
+
+O app aponta por padrão para `http://10.0.2.2:3000`, que é como o emulador Android enxerga a API rodando na máquina. Em aparelho físico, informe o IP da máquina na rede local:
+
+```bash
+flutter run --dart-define=API_BASE_URL=http://192.168.0.10:3000
+```
+
+Pra gerar o APK:
+
+```bash
+flutter build apk --release
+```
+
+O arquivo sai em `apps/cliente/build/app/outputs/flutter-apk/app-release.apk`.
+
+Pra popular dados de demonstração (um prestador com salões, grade de horários e um bloqueio, mais um cliente), com a API no ar:
+
+```bash
+cd backend
+node scripts/seed.js
+```
+
+O seed cria as contas `cliente@festalink.com` e `prestador@festalink.com`, ambas com senha `123456`.
 
 ## Como observar a comunicação assíncrona
 
