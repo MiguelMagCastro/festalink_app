@@ -25,6 +25,7 @@ const { ObterSalao } = require('./services/saloes/ObterSalao');
 const { AtualizarSalao } = require('./services/saloes/AtualizarSalao');
 const { ExcluirSalao } = require('./services/saloes/ExcluirSalao');
 const { DefinirHorarios } = require('./services/saloes/DefinirHorarios');
+const { ListarHorarios } = require('./services/saloes/ListarHorarios');
 const { CriarBloqueio } = require('./services/saloes/CriarBloqueio');
 const { ListarBloqueios } = require('./services/saloes/ListarBloqueios');
 const { RemoverBloqueio } = require('./services/saloes/RemoverBloqueio');
@@ -106,6 +107,7 @@ function comporApi() {
   const atualizarSalao = new AtualizarSalao({ salaoRepository });
   const excluirSalao = new ExcluirSalao({ salaoRepository });
   const definirHorarios = new DefinirHorarios({ salaoRepository, horarioRepository });
+  const listarHorarios = new ListarHorarios({ salaoRepository, horarioRepository });
   const criarBloqueio = new CriarBloqueio({ salaoRepository, bloqueioRepository });
   const listarBloqueios = new ListarBloqueios({ salaoRepository, bloqueioRepository });
   const removerBloqueio = new RemoverBloqueio({ salaoRepository, bloqueioRepository });
@@ -135,7 +137,7 @@ function comporApi() {
   const authController = new AuthController({ registrarUsuario, login, obterMeuPerfil });
   const salaoController = new SalaoController({
     criarSalao, listarSaloes, listarMeusSaloes, obterSalao,
-    atualizarSalao, excluirSalao, definirHorarios,
+    atualizarSalao, excluirSalao, definirHorarios, listarHorarios,
     criarBloqueio, listarBloqueios, removerBloqueio,
   });
   const reservaController = new ReservaController({

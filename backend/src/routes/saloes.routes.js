@@ -24,10 +24,13 @@ function criarSaloesRoutes({ salaoController, autenticar, exigirPapel }) {
   router.put('/:id/horarios', autenticar, exigirPapel('prestador'),
     (req, res, next) => salaoController.putHorarios(req, res, next));
 
+  router.get('/:id/horarios', autenticar,
+    (req, res, next) => salaoController.listarHorariosDoSalao(req, res, next));
+
   router.post('/:id/bloqueios', autenticar, exigirPapel('prestador'),
     (req, res, next) => salaoController.adicionarBloqueio(req, res, next));
 
-  router.get('/:id/bloqueios', autenticar, exigirPapel('prestador'),
+  router.get('/:id/bloqueios', autenticar,
     (req, res, next) => salaoController.listarBloqueiosDoSalao(req, res, next));
 
   router.delete('/:id/bloqueios/:bloqId', autenticar, exigirPapel('prestador'),

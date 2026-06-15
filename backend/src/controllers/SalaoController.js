@@ -50,6 +50,7 @@ class SalaoController {
     atualizarSalao,
     excluirSalao,
     definirHorarios,
+    listarHorarios,
     criarBloqueio,
     listarBloqueios,
     removerBloqueio,
@@ -61,6 +62,7 @@ class SalaoController {
     this.atualizarSalao = atualizarSalao;
     this.excluirSalao = excluirSalao;
     this.definirHorarios = definirHorarios;
+    this.listarHorarios = listarHorarios;
     this.criarBloqueio = criarBloqueio;
     this.listarBloqueios = listarBloqueios;
     this.removerBloqueio = removerBloqueio;
@@ -145,6 +147,16 @@ class SalaoController {
     }
   }
 
+  listarHorariosDoSalao(req, res, next) {
+    try {
+      const salaoId = parseIntParam(req.params.id, 'salaoId');
+      const lista = this.listarHorarios.executar({ salaoId });
+      return res.json(lista.map(horarioParaDTO));
+    } catch (err) {
+      return next(err);
+    }
+  }
+
   adicionarBloqueio(req, res, next) {
     try {
       const salaoId = parseIntParam(req.params.id, 'salaoId');
@@ -162,10 +174,7 @@ class SalaoController {
   listarBloqueiosDoSalao(req, res, next) {
     try {
       const salaoId = parseIntParam(req.params.id, 'salaoId');
-      const lista = this.listarBloqueios.executar({
-        salaoId,
-        prestadorId: req.usuario.id,
-      });
+      const lista = this.listarBloqueios.executar({ salaoId, publico: true });
       return res.json(lista.map(bloqueioParaDTO));
     } catch (err) {
       return next(err);

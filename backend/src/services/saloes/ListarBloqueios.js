@@ -9,12 +9,12 @@ class ListarBloqueios {
     this.bloqueioRepository = bloqueioRepository;
   }
 
-  executar({ salaoId, prestadorId }) {
+  executar({ salaoId, prestadorId, publico = false }) {
     const salao = this.salaoRepository.buscarPorId(salaoId);
     if (!salao) {
       throw new RecursoNaoEncontradoError('salão não encontrado');
     }
-    if (salao.prestadorId !== prestadorId) {
+    if (!publico && salao.prestadorId !== prestadorId) {
       throw new AcessoNegadoError('salão pertence a outro prestador');
     }
     return this.bloqueioRepository.listarPorSalao(salaoId);
