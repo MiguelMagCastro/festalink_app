@@ -25,6 +25,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _reservas = context.read<ReservasViewModel>();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final saloes = context.read<SaloesViewModel>();
+      saloes.filtrar('');
       saloes.carregar();
       _reservas.carregar();
       _reservas.iniciarPolling();
