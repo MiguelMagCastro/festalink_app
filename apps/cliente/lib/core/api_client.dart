@@ -21,13 +21,28 @@ class ApiClient {
         }
         handler.next(options);
       },
+      onError: (erro, handler) {
+        // 401 numa requisição que levava token = sessão expirada/inválida.
+        // O 401 do login não tem token, então não dispara o logout.
+        final tinhaToken =
+            erro.requestOptions.headers.containsKey('Authorization');
+        if (erro.response?.statusCode == 401 && tinhaToken) {
+          _aoExpirarSessao?.call();
+        }
+        handler.next(erro);
+      },
     ));
   }
 
   final Dio dio;
   String? _token;
+  void Function()? _aoExpirarSessao;
 
   void definirToken(String? token) => _token = token;
+
+  /// Registra o que fazer quando o token é rejeitado (HTTP 401) numa chamada
+  /// autenticada — usado para encerrar a sessão e voltar ao login.
+  void aoExpirarSessao(void Function() callback) => _aoExpirarSessao = callback;
 
   ApiException mapearErro(Object erro) {
     if (erro is ApiException) return erro;
